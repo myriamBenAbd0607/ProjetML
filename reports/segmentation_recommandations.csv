@@ -1,0 +1,5 @@
+Cluster,Nom du segment,Nombre clients,% clients,Taux churn,Recency (jours),Frequency (achats),Monetary (€),Profil,Recommandation,Priorité
+0,Clients VIP / Champions,547,15.6%,3.3%,22,15.0,5699,"Achats très fréquents, dépenses élevées, fidélité maximale","🌟 Programme de parrainage, offres exclusives, accès anticipé aux nouveautés",🔴 Stratégique
+1,Clients à Risque Élevé,2,0.1%,50.0%,164,2.5,1,"Signes de départ imminent, activité en forte baisse","📞 Offre de fidélisation urgente, contact personnalisé, code promo exclusif",🟠 Urgent
+2,Clients Occasionnels,2936,84.0%,39.0%,106,2.9,830,"Achats peu fréquents, potentiel de croissance important","📧 Newsletter engageante, recommandations produits personnalisées",🟡 Moyenne
+3,Clients VIP / Champions,12,0.3%,0.0%,5,107.8,93293,"Achats très fréquents, dépenses élevées, fidélité maximale","🌟 Programme de parrainage, offres exclusives, accès anticipé aux nouveautés",🔴 Stratégique

@@ -1,0 +1,411 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tikz}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{multicol}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{amssymb}
+
+\geometry{margin=2cm}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Atelier Machine Learning}
+\lhead{Analyse Comportementale Clientèle}
+\rfoot{Page \thepage}
+
+% Couleurs personnalisées
+\definecolor{headerblue}{RGB}{41, 65, 114}
+\definecolor{lightgray}{RGB}{245, 245, 245}
+\definecolor{accentorange}{RGB}{230, 126, 34}
+\definecolor{codegreen}{RGB}{0,128,0}
+\definecolor{codegray}{RGB}{128,128,128}
+\definecolor{codepurple}{RGB}{128,0,128}
+\definecolor{backcolour}{RGB}{248,248,248}
+\definecolor{warningred}{RGB}{231, 76, 60}
+\definecolor{successgreen}{RGB}{46, 204, 113}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{codepurple},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codegreen},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+\tcbset{
+    colback=backcolour,
+    colframe=headerblue,
+    fonttitle=\bfseries,
+    boxrule=1pt,
+    arc=3mm
+}
+
+\titleformat{\section}
+{\color{headerblue}\normalfont\Large\bfseries}
+{\thesection}{1em}{}[{\titlerule[2pt]}]
+
+\titleformat{\subsection}
+{\color{accentorange}\normalfont\large\bfseries}
+{\thesubsection}{1em}{}
+
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\begin{document}
+
+\begin{titlepage}
+\begin{tikzpicture}[remember picture,overlay]
+    \fill[headerblue] (current page.north west) rectangle ([yshift=-5cm]current page.north east);
+    \node[anchor=north west, xshift=2cm, yshift=-2cm, text=white] at (current page.north west) 
+        {\Huge\textbf{Atelier Machine Learning}};
+    \node[anchor=north west, xshift=2cm, yshift=-3.5cm, text=white] at (current page.north west) 
+        {\Large\textit{Analyse Comportementale Clientèle Retail}};
+\end{tikzpicture}
+
+\vspace{6cm}
+
+\begin{center}
+{\LARGE\textbf{COMPTE RENDU}}\par
+\vspace{1cm}
+{\large Atelier Pratique : E-commerce de Cadeaux}\par
+\vspace{2cm}
+{\large \textbf{Préparé par [VOTRE NOM]}}
+\vspace{3cm}
+
+\begin{tikzpicture}
+    \draw[headerblue, line width=2pt] (0,0) -- (10,0);
+\end{tikzpicture}
+
+\vspace{2cm}
+
+\vspace{5cm}
+
+{\textbf{Année Universitaire : 2025-2026}}
+
+\end{center}
+\vfill
+\end{titlepage}
+
+\section{Introduction et Contexte}
+
+\subsection{Présentation du projet}
+Ce projet a été réalisé dans le cadre de l'atelier Machine Learning. L'objectif est de développer une solution complète d'analyse comportementale pour une entreprise e-commerce spécialisée dans la vente de cadeaux.
+
+\subsection{Objectifs}
+\begin{itemize}
+    \item Analyser le comportement des clients pour mieux comprendre leurs habitudes d'achat
+    \item Prédire le risque de départ des clients (churn)
+    \item Développer un modèle de classification performant
+    \item Créer une interface utilisateur pour la prédiction en temps réel
+\end{itemize}
+
+\section{Exploration et Préparation des Données}
+
+\subsection{Structure des données}
+Le jeu de données comprend :
+\begin{itemize}
+    \item \textbf{4 372 clients}
+    \item \textbf{52 features} initiales
+    \item Types de données : 20 colonnes int64, 14 colonnes float64, 18 colonnes object
+\end{itemize}
+
+\subsection{Analyse de la variable cible (Churn)}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Classe} & \textbf{Nombre} & \textbf{Pourcentage} \\
+\hline
+Fidèle (Churn = 0) & 2 800 & 64.0\% \\
+Parti (Churn = 1) & 1 572 & 36.0\% \\
+\hline
+\end{tabular}
+\caption{Répartition de la variable cible}
+\end{table}
+
+\subsection{Problèmes identifiés et traitements}
+
+\subsubsection{Valeurs manquantes}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Colonne} & \textbf{Manquantes} & \textbf{Traitement} \\
+\hline
+Age & 1 311 (30\%) & Imputation par la médiane \\
+AvgDaysBetweenPurchases & 79 (1.8\%) & Remplacement par 0 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Codes spéciaux}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Colonne} & \textbf{Codes spéciaux} & \textbf{Traitement} \\
+\hline
+SupportTicketsCount & -1 (43), 999 (87) & Remplacement par médiane (2.0) \\
+SatisfactionScore & -1 (115), 0 (120), 99 (114) & Remplacement par médiane (3.0) \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Traitement des dates}
+\begin{itemize}
+    \item Parsing de \texttt{RegistrationDate} avec \texttt{pd.to\_datetime()}
+    \item Conversion en timestamp (secondes depuis 1970)
+    \item Extraction de nouvelles features : RegYear, RegMonth, RegDay, RegWeekday
+\end{itemize}
+
+\subsection{Encodage des variables catégorielles}
+\begin{itemize}
+    \item 18 variables catégorielles initiales
+    \item \textbf{4 326 features} après One-Hot Encoding
+    \item Suppression de \texttt{NewsletterSubscribed} (constante)
+\end{itemize}
+
+\subsection{Normalisation}
+Application d'un \texttt{StandardScaler} sur les colonnes numériques (moyenne=0, écart-type=1). Les colonnes booléennes issues de l'encodage one-hot ne sont pas normalisées.
+
+\section{Modélisation}
+
+\subsection{Séparation Train/Test}
+\begin{verbatim}
+X_train shape: (3 497, 4 326)
+X_test shape: (875, 4 326)
+y_train shape: (3 497,)
+y_test shape: (875,)
+\end{verbatim}
+
+\subsection{Modèle choisi : Random Forest}
+Après comparaison avec KNN (90.9\%) et Arbre de décision (100\% - surapprentissage), le modèle \textbf{Random Forest} a été retenu pour ses performances et sa robustesse.
+
+\subsubsection{Hyperparamètres optimisés}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Paramètre} & \textbf{Valeur} \\
+\hline
+n\_estimators & 200 \\
+max\_depth & 10 \\
+min\_samples\_split & 10 \\
+min\_samples\_leaf & 5 \\
+random\_state & 42 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Évaluation des performances}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Métrique} & \textbf{Valeur} \\
+\hline
+Exactitude (Accuracy) & \textbf{91.9\%} \\
+Précision (Precision) & 92.3\% \\
+Rappel (Recall) & 91.1\% \\
+F1-Score & 91.7\% \\
+\hline
+\end{tabular}
+\caption{Performances du modèle sur les données de test}
+\end{table}
+
+\subsection{Features les plus importantes}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Feature} & \textbf{Importance} \\
+\hline
+Recency & 9.20\% \\
+CustomerType\_Perdu & 7.36\% \\
+ChurnRiskCategory\_Faible & 5.93\% \\
+Frequency & 5.21\% \\
+MonetaryTotal & 4.87\% \\
+\hline
+\end{tabular}
+\caption{Top 5 des features les plus importantes}
+\end{table}
+
+\section{Segmentation Client (K-Means)}
+
+\subsection{Résultats de l'ACP}
+L'analyse en composantes principales a permis de réduire la dimensionnalité :
+\begin{itemize}
+    \item Variance expliquée par CP1 : 18.5\%
+    \item Variance expliquée par CP2 : 13.2\%
+    \item Variance totale conservée : 31.7\%
+\end{itemize}
+
+\subsection{Résultats de la segmentation}
+La méthode du coude a déterminé un nombre optimal de \textbf{4 segments} clients.
+
+\begin{table}[h]
+\centering
+\caption{Segmentation clientèle - Profils et recommandations}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\textbf{Segment} & \textbf{Clients} & \textbf{Churn} & \textbf{Recency} & \textbf{Frequency} & \textbf{Monetary} & \textbf{Profil} \\
+\hline
+\textbf{Cluster 0} & 547 (15.6\%) & 3.3\% & 22 j & 15.0 & 5 699 € & VIP - Achats fréquents \\
+\hline
+\textbf{Cluster 1} & 2 (0.1\%) & 50.0\% & 164 j & 2.5 & 1 € & Risque élevé - Inactifs \\
+\hline
+\textbf{Cluster 2} & 2 936 (84.0\%) & 39.0\% & 106 j & 2.9 & 830 € & Occasionnels \\
+\hline
+\textbf{Cluster 3} & 12 (0.3\%) & 0.0\% & 5 j & 107.8 & 93 293 € & Super VIP \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Recommandations marketing par segment}
+\begin{itemize}
+    \item \textbf{Cluster 0 (VIP)} : Programme de parrainage, offres exclusives, accès anticipé aux nouveautés.
+    \item \textbf{Cluster 1 (Risque élevé)} : Contact personnalisé prioritaire, analyse des causes de désengagement.
+    \item \textbf{Cluster 2 (Occasionnels)} : Newsletter engageante, recommandations produits personnalisées.
+    \item \textbf{Cluster 3 (Super VIP)} : Programme de fidélité premium, avantages exclusifs, événements privés.
+\end{itemize}
+
+\section{Déploiement}
+
+\subsection{Application Flask}
+Une interface web a été développée avec Flask pour permettre la prédiction en temps réel.
+
+\subsubsection{Fonctionnalités}
+\begin{itemize}
+    \item Formulaire de saisie des données client (Recency, Frequency, Monetary, Age)
+    \item Prédiction du risque de départ avec probabilité
+    \item Recommandations personnalisées selon le niveau de risque
+    \item Interface responsive et intuitive
+\end{itemize}
+
+\subsubsection{Structure de l'application}
+\begin{lstlisting}[language=bash, caption=Arborescence de l'application]
+app/
+├── app.py              # Application Flask
+└── templates/
+    └── index.html      # Interface utilisateur
+
+models/
+├── random_forest_churn.pkl   # Modèle entraîné (91.9%)
+├── scaler.pkl                # Normaliseur
+└── feature_indices.pkl       # Indices des colonnes
+\end{lstlisting}
+
+\subsection{Exemple de prédiction}
+\begin{tcolorbox}[title=Test avec un client à risque]
+\textbf{Données saisies :}
+\begin{itemize}
+    \item Recency : 300 jours
+    \item Frequency : 1 achat
+    \item Monetary : 50 £
+    \item Age : 28 ans
+\end{itemize}
+\textbf{Résultat :} Risque Élevé (probabilité > 70\%)
+\textbf{Recommandation :} Envoyer une offre personnalisée pour fidéliser ce client.
+\end{tcolorbox}
+
+\section{Résultats et Recommandations}
+
+\subsection{Principaux enseignements}
+\begin{enumerate}
+    \item La \textbf{date du dernier achat (Recency)} est le facteur le plus prédictif du churn (9.20\%)
+    \item La \textbf{fréquence d'achat (Frequency)} est le deuxième facteur clé
+    \item Le modèle atteint une précision de \textbf{91.9\%}, suffisante pour un déploiement en production
+    \item La segmentation a identifié 4 groupes distincts avec des comportements très différents
+\end{enumerate}
+
+\subsection{Recommandations marketing}
+\begin{itemize}
+    \item \textbf{Cibler les clients à risque élevé} : Envoyer des offres personnalisées aux clients identifiés avec probabilité > 70\%
+    \item \textbf{Réactiver les clients dormants} : Campagne d'emailing ciblée après 60 jours d'inactivité
+    \item \textbf{Fidéliser les clients VIP} : Programme de fidélité avec avantages exclusifs
+    \item \textbf{Suivi des clients occasionnels} : Newsletter engageante, recommandations produits
+\end{itemize}
+
+\section{Conclusion}
+
+Ce projet a permis de :
+\begin{itemize}
+    \item Maîtriser l'ensemble de la chaîne de traitement en data science (exploration → préparation → modélisation → évaluation → déploiement)
+    \item Appliquer des techniques avancées de prétraitement (imputation, encodage, normalisation)
+    \item Développer un modèle de classification performant (91.9\% d'exactitude)
+    \item Créer une segmentation client actionable avec K-Means (4 segments identifiés)
+    \item Déployer une application web fonctionnelle avec Flask
+\end{itemize}
+
+Les résultats obtenus démontrent la faisabilité d'une solution de prédiction du churn client, permettant à l'entreprise d'anticiper les départs et d'optimiser ses stratégies marketing.
+
+\section*{Annexes}
+
+\subsection*{A. Commandes d'installation et d'exécution}
+\begin{lstlisting}[language=bash]
+# Création de l'environnement virtuel
+python -m venv venv
+source venv/bin/activate  # ou venv\Scripts\activate sous Windows
+
+# Installation des dépendances
+pip install -r requirements.txt
+
+# Lancement de l'application
+cd app
+python app.py
+\end{lstlisting}
+
+\subsection*{B. Lien GitHub}
+\url{https://github.com/[votre-username]/projet_ml_retail}
+
+\subsection*{C. Technologies utilisées}
+\begin{itemize}
+    \item Python 3.9+
+    \item scikit-learn (modélisation, segmentation)
+    \item pandas, numpy (prétraitement)
+    \item Flask (déploiement)
+    \item joblib (sauvegarde du modèle)
+    \item Matplotlib, Seaborn (visualisations)
+\end{itemize}
+
+\subsection*{D. Métriques détaillées du modèle final}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Métrique} & \textbf{Valeur} \\
+\hline
+Accuracy & 0.919 \\
+Precision (Churn=1) & 0.923 \\
+Recall (Churn=1) & 0.911 \\
+F1-Score & 0.917 \\
+\hline
+\end{tabular}
+\end{table}
+
+\end{document}

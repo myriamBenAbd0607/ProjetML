@@ -195,3 +195,19 @@ NewsletterSubscribed (constante)
 - ✅ Très fiable quand il prédit un départ
 - ⚠️ Rate 1 client partant sur 4
 - 📊 Performance globalement très bonne pour un premier modèle
+
+## Résultats de la segmentation client (K-Means)
+
+### 4 segments identifiés :
+
+| Segment | Nombre clients | Taux de churn | Profil | Recommandation |
+|---------|----------------|---------------|--------|----------------|
+| **Cluster 0** | 547 (16%) | 3.3% | Clients fidèles, achats fréquents et dépenses élevées | Programme de parrainage, offre VIP |
+| **Cluster 1** | 2 (0.06%) | 50% | Clients extrêmement inactifs | Contact personnalisé prioritaire |
+| **Cluster 2** | 2936 (84%) | 39% | Clients occasionnels, faible fréquence | Campagnes de réengagement |
+| **Cluster 3** | ? | ? | ? | ? |
+
+### Recommandations marketing :
+- **Fidéliser les Cluster 0** : programme VIP, avantages exclusifs
+- **Réactiver les Cluster 2** : emails personnalisés, offres spéciales
+- **Sauver les Cluster 1** : contact direct, analyse des causes
