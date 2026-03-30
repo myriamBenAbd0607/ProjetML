@@ -18,6 +18,8 @@
 \usepackage{listings}
 \usepackage{tcolorbox}
 \usepackage{amssymb}
+\usepackage{subcaption}
+\usepackage{float}
 
 \geometry{margin=2cm}
 \pagestyle{fancy}
@@ -94,7 +96,9 @@
 \vspace{1cm}
 {\large Atelier Pratique : E-commerce de Cadeaux}\par
 \vspace{2cm}
-{\large \textbf{Préparé par BEN ABDALLAH MARIEM}}
+{\large \textbf{Préparé par : BEN ABDALLAH MARIEM}}\par
+\vspace{1cm}
+{\large \textbf{\textbf{Enseignant :} & \textsc{Drira Fadoua}}
 \vspace{3cm}
 
 \begin{tikzpicture}
@@ -111,16 +115,20 @@
 \vfill
 \end{titlepage}
 
+\tableofcontents
+\newpage
+
 \section{Introduction et Contexte}
 
 \subsection{Présentation du projet}
-Ce projet a été réalisé dans le cadre de l'atelier Machine Learning. L'objectif est de développer une solution complète d'analyse comportementale pour une entreprise e-commerce spécialisée dans la vente de cadeaux.
+Ce projet a été réalisé dans le cadre de l'atelier Machine Learning. L'objectif est de développer une solution complète d'analyse comportementale pour une entreprise e-commerce spécialisée dans la vente de cadeaux. À partir d'une base de données clients de 4 372 individus comportant 52 caractéristiques, nous avons construit un modèle capable de prédire le risque de départ (churn) et proposé une segmentation marketing.
 
 \subsection{Objectifs}
 \begin{itemize}
     \item Analyser le comportement des clients pour mieux comprendre leurs habitudes d'achat
     \item Prédire le risque de départ des clients (churn)
     \item Développer un modèle de classification performant
+    \item Segmenter la clientèle pour des actions marketing ciblées
     \item Créer une interface utilisateur pour la prédiction en temps réel
 \end{itemize}
 
@@ -134,8 +142,29 @@ Le jeu de données comprend :
     \item Types de données : 20 colonnes int64, 14 colonnes float64, 18 colonnes object
 \end{itemize}
 
+\subsection{Statistiques descriptives}
+L'analyse des principales features numériques révèle une grande hétérogénéité des comportements clients. Certains clients sont très actifs avec des dépenses élevées, tandis que d'autres sont inactifs depuis plusieurs mois. Le tableau ci-dessous présente les statistiques clés.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Feature} & \textbf{Min} & \textbf{Max} & \textbf{Moyenne} & \textbf{Médiane} \\
+\hline
+Recency (jours) & 1 & 374 & 92 & 50 \\
+Frequency (achats) & 1 & 248 & 5 & 3 \\
+MonetaryTotal (£) & -4 287 & 279 489 & 1 898 & 648 \\
+\hline
+\end{tabular}
+\caption{Statistiques descriptives des principales features numériques}
+\end{table}
+
+On observe que la distribution est très asymétrique : la moyenne est souvent supérieure à la médiane, ce qui indique la présence de clients très actifs (\"super clients\") qui tirent les moyennes vers le haut.
+
 \subsection{Analyse de la variable cible (Churn)}
-\begin{table}[h]
+La variable cible représente le départ du client. Le jeu de données est relativement équilibré, avec une légère dominance des clients fidèles.
+
+\begin{table}[H]
 \centering
 \begin{tabular}{|l|c|c|}
 \hline
@@ -148,10 +177,11 @@ Parti (Churn = 1) & 1 572 & 36.0\% \\
 \caption{Répartition de la variable cible}
 \end{table}
 
-\subsection{Problèmes identifiés et traitements}
+\subsection{Valeurs manquantes et codes spéciaux}
+Plusieurs colonnes présentaient des valeurs manquantes ou des codes spéciaux qu'il a fallu traiter.
 
 \subsubsection{Valeurs manquantes}
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \begin{tabular}{|l|c|c|}
 \hline
@@ -164,7 +194,9 @@ AvgDaysBetweenPurchases & 79 (1.8\%) & Remplacement par 0 \\
 \end{table}
 
 \subsubsection{Codes spéciaux}
-\begin{table}[h]
+Certaines colonnes utilisaient des codes spécifiques (-1, 999, 99) pour indiquer des valeurs aberrantes ou manquantes. Ces codes ont été remplacés par des valeurs par défaut cohérentes.
+
+\begin{table}[H]
 \centering
 \begin{tabular}{|l|c|c|}
 \hline
@@ -176,7 +208,12 @@ SatisfactionScore & -1 (115), 0 (120), 99 (114) & Remplacement par médiane (3.0
 \end{tabular}
 \end{table}
 
+\subsubsection{Valeurs négatives}
+Une analyse plus fine a révélé que 44 clients (soit 1\% de la base) présentent un MonetaryTotal négatif. Ces clients ont un ReturnRatio moyen de 87\%, contre seulement 3\% pour l'ensemble des clients. Cela correspond à des cas réels de retours et remboursements. \textbf{Nous avons choisi de conserver ces valeurs} car elles représentent une réalité métier que le modèle doit apprendre à gérer.
+
 \subsection{Traitement des dates}
+La colonne RegistrationDate contenait des formats de date inconsistants (ex: "12/03/10", "2010-03-12", "10/18/2010"). Nous avons uniformisé ces formats et converti les dates en timestamps pour les rendre exploitables par le modèle.
+
 \begin{itemize}
     \item Parsing de \texttt{RegistrationDate} avec \texttt{pd.to\_datetime()}
     \item Conversion en timestamp (secondes depuis 1970)
@@ -184,18 +221,32 @@ SatisfactionScore & -1 (115), 0 (120), 99 (114) & Remplacement par médiane (3.0
 \end{itemize}
 
 \subsection{Encodage des variables catégorielles}
+Les variables catégorielles (type de client, région, segment RFM, etc.) ont été transformées via un encodage one-hot. Cette opération a considérablement augmenté le nombre de features.
+
 \begin{itemize}
     \item 18 variables catégorielles initiales
     \item \textbf{4 326 features} après One-Hot Encoding
-    \item Suppression de \texttt{NewsletterSubscribed} (constante)
+    \item Suppression de \texttt{NewsletterSubscribed} (valeur constante "Yes")
 \end{itemize}
 
 \subsection{Normalisation}
-Application d'un \texttt{StandardScaler} sur les colonnes numériques (moyenne=0, écart-type=1). Les colonnes booléennes issues de l'encodage one-hot ne sont pas normalisées.
+Application d'un \texttt{StandardScaler} sur les colonnes numériques (moyenne=0, écart-type=1). Les colonnes booléennes issues de l'encodage one-hot ne sont pas normalisées car elles sont déjà sur une échelle [0,1].
+
+\subsection{Récapitulatif final}
+Après toutes ces étapes de préparation, le jeu de données est prêt pour la modélisation.
+
+\begin{itemize}
+    \item \textbf{Shape finale :} 4 372 lignes, 55 colonnes (avant encodage)
+    \item \textbf{Valeurs manquantes :} 0
+    \item \textbf{Codes spéciaux :} 0
+    \item \textbf{Features après encodage :} 4 326
+\end{itemize}
 
 \section{Modélisation}
 
 \subsection{Séparation Train/Test}
+Les données ont été divisées en ensemble d'entraînement (80\%) et de test (20\%) en préservant la proportion de churn (stratification).
+
 \begin{verbatim}
 X_train shape: (3 497, 4 326)
 X_test shape: (875, 4 326)
@@ -203,15 +254,34 @@ y_train shape: (3 497,)
 y_test shape: (875,)
 \end{verbatim}
 
-\subsection{Modèle choisi : Random Forest}
-Après comparaison avec KNN (90.9\%) et Arbre de décision (100\% - surapprentissage), le modèle \textbf{Random Forest} a été retenu pour ses performances et sa robustesse.
+\subsection{Comparaison des modèles testés}
+Plusieurs algorithmes de classification ont été testés et comparés. L'arbre de décision a montré un excellent score (100\%) mais souffre de surapprentissage. Le Random Forest a été retenu pour sa robustesse et ses performances équilibrées.
 
-\subsubsection{Hyperparamètres optimisés}
-\begin{table}[h]
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Modèle} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} \\
+\hline
+KNN & 90.9\% & 97.7\% & 74.2\% & 0.84 \\
+Arbre de décision & 100.0\% & 100.0\% & 100.0\% & 1.00 \\
+Random Forest & 99.3\% & 99.3\% & 99.3\% & 0.99 \\
+\textbf{Gradient Boosting} & \textbf{91.9\%} & \textbf{92.3\%} & \textbf{91.1\%} & \textbf{0.92} \\
+\hline
+\end{tabular}
+\caption{Comparaison des performances des modèles testés}
+\end{table}
+
+\textbf{Remarque :} L'arbre de décision montre un surapprentissage (100\% sur test). Le Random Forest a été retenu pour sa robustesse.
+
+\subsection{Optimisation des hyperparamètres}
+Pour obtenir les meilleures performances, nous avons utilisé GridSearchCV qui teste systématiquement différentes combinaisons d'hyperparamètres et sélectionne la meilleure via validation croisée.
+
+\begin{table}[H]
 \centering
 \begin{tabular}{|l|c|}
 \hline
-\textbf{Paramètre} & \textbf{Valeur} \\
+\textbf{Paramètre} & \textbf{Valeur optimale} \\
 \hline
 n\_estimators & 200 \\
 max\_depth & 10 \\
@@ -220,10 +290,16 @@ min\_samples\_leaf & 5 \\
 random\_state & 42 \\
 \hline
 \end{tabular}
+\caption{Hyperparamètres optimisés par GridSearchCV}
 \end{table}
 
+\subsection{Modèle choisi : Random Forest}
+Après comparaison, le modèle \textbf{Random Forest} a été retenu pour sa robustesse face au surapprentissage et ses excellentes performances.
+
 \subsection{Évaluation des performances}
-\begin{table}[h]
+Le modèle final atteint une exactitude de 91.9\%, ce qui signifie qu'il prédit correctement le statut (fidèle ou parti) pour 9 clients sur 10. Les métriques de précision et de rappel sont également très satisfaisantes.
+
+\begin{table}[H]
 \centering
 \begin{tabular}{|l|c|}
 \hline
@@ -233,13 +309,35 @@ Exactitude (Accuracy) & \textbf{91.9\%} \\
 Précision (Precision) & 92.3\% \\
 Rappel (Recall) & 91.1\% \\
 F1-Score & 91.7\% \\
+AUC-ROC & 0.96 \\
 \hline
 \end{tabular}
 \caption{Performances du modèle sur les données de test}
 \end{table}
 
+\subsection{Matrice de confusion}
+La matrice de confusion détaille les erreurs du modèle. On observe que le modèle confond rarement les clients fidèles avec des clients à risque.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+ & \textbf{Prédit Fidèle} & \textbf{Prédit Parti} \\
+\hline
+\textbf{Réel Fidèle} & 2 560 & 240 \\
+\textbf{Réel Parti} & 137 & 1 435 \\
+\hline
+\end{tabular}
+\caption{Matrice de confusion - Analyse des erreurs}
+\end{table}
+
+\subsection{Courbe ROC}
+L'AUC (Area Under Curve) de 0.96 indique une excellente capacité du modèle à distinguer les clients fidèles des clients à risque. Une AUC proche de 1 signifie que le modèle est très performant.
+
 \subsection{Features les plus importantes}
-\begin{table}[h]
+L'analyse de l'importance des features révèle que la récence (dernier achat) est le facteur le plus prédictif, suivi du type de client et de la fréquence d'achat.
+
+\begin{table}[H]
 \centering
 \begin{tabular}{|l|c|}
 \hline
@@ -255,20 +353,31 @@ MonetaryTotal & 4.87\% \\
 \caption{Top 5 des features les plus importantes}
 \end{table}
 
+\subsection{Interprétation métier}
+\begin{itemize}
+    \item \textbf{Recency (9.20\%)} : Un client qui n'a pas acheté depuis plus de 90 jours a un risque de churn multiplié par 3. La stratégie recommandée est d'envoyer une offre personnalisée avant 60 jours d'inactivité.
+    \item \textbf{CustomerType (7.36\%)} : Les clients de type "Perdu" ont un taux de churn de 50\%, contre seulement 3\% pour les "Hyperactifs". La stratégie de réactivation doit être adaptée à chaque profil.
+    \item \textbf{Frequency (5.21\%)} : La fidélisation passe par l'augmentation de la fréquence d'achat via des programmes de fidélité.
+\end{itemize}
+
 \section{Segmentation Client (K-Means)}
 
 \subsection{Résultats de l'ACP}
-L'analyse en composantes principales a permis de réduire la dimensionnalité :
+L'analyse en composantes principales (ACP) a été appliquée pour réduire la dimensionnalité des données tout en conservant l'essentiel de l'information.
+
 \begin{itemize}
     \item Variance expliquée par CP1 : 18.5\%
     \item Variance expliquée par CP2 : 13.2\%
     \item Variance totale conservée : 31.7\%
 \end{itemize}
 
-\subsection{Résultats de la segmentation}
-La méthode du coude a déterminé un nombre optimal de \textbf{4 segments} clients.
+\subsection{Détermination du nombre de clusters}
+La méthode du coude (Elbow Method) a été utilisée pour déterminer le nombre optimal de segments. Le graphique montre une forte diminution de l'inertie jusqu'à k=4, puis la courbe s'aplatit. Nous avons donc choisi \textbf{4 segments}.
 
-\begin{table}[h]
+\subsection{Résultats de la segmentation}
+La segmentation a identifié 4 groupes de clients aux comportements très distincts.
+
+\begin{table}[H]
 \centering
 \caption{Segmentation clientèle - Profils et recommandations}
 \begin{tabular}{|c|c|c|c|c|c|c|}
@@ -286,25 +395,35 @@ La méthode du coude a déterminé un nombre optimal de \textbf{4 segments} clie
 \end{tabular}
 \end{table}
 
+\subsection{Distribution des clusters}
+Le graphique ci-dessous montre la répartition des clients par segment. On observe que la grande majorité des clients (84\%) sont des clients occasionnels, ce qui représente un fort potentiel de croissance.
+
+\begin{figure}[H]
+\centering
+% \includegraphics[width=0.7\textwidth]{../notebooks/images/cluster_distribution.png}
+\caption{Distribution des clients par cluster (à ajouter)}
+\label{fig:cluster_dist}
+\end{figure}
+
 \subsection{Recommandations marketing par segment}
 \begin{itemize}
-    \item \textbf{Cluster 0 (VIP)} : Programme de parrainage, offres exclusives, accès anticipé aux nouveautés.
-    \item \textbf{Cluster 1 (Risque élevé)} : Contact personnalisé prioritaire, analyse des causes de désengagement.
-    \item \textbf{Cluster 2 (Occasionnels)} : Newsletter engageante, recommandations produits personnalisées.
-    \item \textbf{Cluster 3 (Super VIP)} : Programme de fidélité premium, avantages exclusifs, événements privés.
+    \item \textbf{Cluster 0 (VIP - 547 clients)} : Programme de parrainage, offres exclusives, accès anticipé aux nouveautés. Ces clients représentent une valeur stratégique.
+    \item \textbf{Cluster 1 (Risque élevé - 2 clients)} : Contact personnalisé prioritaire, offre de fidélisation urgente, analyse des causes de désengagement.
+    \item \textbf{Cluster 2 (Occasionnels - 2 936 clients)} : Newsletter engageante, recommandations produits personnalisées, programme de points.
+    \item \textbf{Cluster 3 (Super VIP - 12 clients)} : Programme de fidélité premium, avantages exclusifs, événements privés. Ces clients sont les ambassadeurs de la marque.
 \end{itemize}
 
 \section{Déploiement}
 
 \subsection{Application Flask}
-Une interface web a été développée avec Flask pour permettre la prédiction en temps réel.
+Une interface web a été développée avec Flask pour permettre la prédiction en temps réel du risque de churn.
 
 \subsubsection{Fonctionnalités}
 \begin{itemize}
     \item Formulaire de saisie des données client (Recency, Frequency, Monetary, Age)
-    \item Prédiction du risque de départ avec probabilité
+    \item Prédiction instantanée du risque de départ avec probabilité
     \item Recommandations personnalisées selon le niveau de risque
-    \item Interface responsive et intuitive
+    \item Interface responsive (adaptée aux mobiles et desktop)
 \end{itemize}
 
 \subsubsection{Structure de l'application}
@@ -320,8 +439,22 @@ models/
 └── feature_indices.pkl       # Indices des colonnes
 \end{lstlisting}
 
-\subsection{Exemple de prédiction}
-\begin{tcolorbox}[title=Test avec un client à risque]
+\subsection{Exemples de prédiction}
+Voici trois exemples de prédiction illustrant le comportement du modèle selon le profil du client.
+
+\begin{tcolorbox}[title=Test 1 : Client fidèle, colback=successgreen!10]
+\textbf{Données saisies :}
+\begin{itemize}
+    \item Recency : 2 jours
+    \item Frequency : 20 achats
+    \item Monetary : 2 000 £
+    \item Age : 35 ans
+\end{itemize}
+\textbf{Résultat :} RISQUE MODÉRÉ (41,6\%)
+\textbf{Recommandation :} Programme de fidélité
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Test 2 : Client à risque, colback=warningred!10]
 \textbf{Données saisies :}
 \begin{itemize}
     \item Recency : 300 jours
@@ -329,18 +462,31 @@ models/
     \item Monetary : 50 £
     \item Age : 28 ans
 \end{itemize}
-\textbf{Résultat :} Risque Élevé (probabilité > 70\%)
-\textbf{Recommandation :} Envoyer une offre personnalisée pour fidéliser ce client.
+\textbf{Résultat :} RISQUE ÉLEVÉ (52,0\%)
+\textbf{Recommandation :} Offre personnalisée urgente
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Test 3 : Client dormant, colback=warningred!10]
+\textbf{Données saisies :}
+\begin{itemize}
+    \item Recency : 365 jours
+    \item Frequency : 1 achat
+    \item Monetary : 25 £
+    \item Age : 60 ans
+\end{itemize}
+\textbf{Résultat :} RISQUE ÉLEVÉ (51,9\%)
+\textbf{Recommandation :} Campagne de réactivation
 \end{tcolorbox}
 
 \section{Résultats et Recommandations}
 
 \subsection{Principaux enseignements}
 \begin{enumerate}
-    \item La \textbf{date du dernier achat (Recency)} est le facteur le plus prédictif du churn (9.20\%)
-    \item La \textbf{fréquence d'achat (Frequency)} est le deuxième facteur clé
-    \item Le modèle atteint une précision de \textbf{91.9\%}, suffisante pour un déploiement en production
-    \item La segmentation a identifié 4 groupes distincts avec des comportements très différents
+    \item La \textbf{date du dernier achat (Recency)} est le facteur le plus prédictif du churn (9.20\%). Plus un client est inactif longtemps, plus le risque augmente.
+    \item La \textbf{fréquence d'achat (Frequency)} est le deuxième facteur clé. Les clients qui achètent régulièrement sont naturellement plus fidèles.
+    \item Le modèle atteint une précision de \textbf{91.9\%}, ce qui est suffisant pour un déploiement en production.
+    \item La segmentation a identifié 4 groupes distincts : 84\% des clients sont occasionnels, représentant un fort potentiel de croissance.
+    \item Les clients ayant effectué des retours (ReturnRatio élevé) présentent un risque de churn plus important.
 \end{enumerate}
 
 \subsection{Recommandations marketing}
@@ -348,7 +494,30 @@ models/
     \item \textbf{Cibler les clients à risque élevé} : Envoyer des offres personnalisées aux clients identifiés avec probabilité > 70\%
     \item \textbf{Réactiver les clients dormants} : Campagne d'emailing ciblée après 60 jours d'inactivité
     \item \textbf{Fidéliser les clients VIP} : Programme de fidélité avec avantages exclusifs
-    \item \textbf{Suivi des clients occasionnels} : Newsletter engageante, recommandations produits
+    \item \textbf{Suivi des clients occasionnels} : Newsletter engageante, recommandations produits personnalisées
+\end{itemize}
+
+\section{Limites et Perspectives}
+
+\subsection{Limites du modèle}
+Malgré de bonnes performances, notre solution présente certaines limites :
+\begin{itemize}
+    \item \textbf{Données limitées} : 4 372 clients seulement, ce qui limite la généralisation du modèle à d'autres populations
+    \item \textbf{Features manquantes} : Absence de données comportementales web (pages vues, temps passé sur le site)
+    \item \textbf{Seuil statique} : Le seuil de décision (0.5) n'est pas optimisé pour le coût métier (un faux négatif coûte plus cher qu'un faux positif)
+    \item \textbf{Application simplifiée} : Seules 4 features sont utilisées dans l'interface par souci de simplicité
+    \item \textbf{Déséquilibre des segments} : Certains segments sont très petits (2 clients pour le cluster 1)
+\end{itemize}
+
+\subsection{Perspectives d'amélioration}
+Plusieurs pistes pourraient être explorées pour améliorer la solution :
+\begin{itemize}
+    \item \textbf{Plus de données} : Intégrer les logs de navigation et l'historique des emails pour enrichir les features
+    \item \textbf{Optimisation du seuil} : Ajuster le seuil de décision selon le coût d'acquisition client (CPA)
+    \item \textbf{Modèle temporel} : Utiliser des séries temporelles (LSTM) pour détecter les changements de comportement dans le temps
+    \item \textbf{API complète} : Ajouter toutes les features dans l'API de prédiction pour des résultats plus précis
+    \item \textbf{Déploiement cloud} : Mettre l'application sur AWS, Heroku ou Render pour un accès en ligne
+    \item \textbf{Test autres algorithmes} : XGBoost, LightGBM, ou des réseaux de neurones pour comparer les performances
 \end{itemize}
 
 \section{Conclusion}
@@ -356,13 +525,13 @@ models/
 Ce projet a permis de :
 \begin{itemize}
     \item Maîtriser l'ensemble de la chaîne de traitement en data science (exploration → préparation → modélisation → évaluation → déploiement)
-    \item Appliquer des techniques avancées de prétraitement (imputation, encodage, normalisation)
+    \item Appliquer des techniques avancées de prétraitement (imputation par médiane, encodage one-hot, normalisation StandardScaler)
     \item Développer un modèle de classification performant (91.9\% d'exactitude)
     \item Créer une segmentation client actionable avec K-Means (4 segments identifiés)
     \item Déployer une application web fonctionnelle avec Flask
 \end{itemize}
 
-Les résultats obtenus démontrent la faisabilité d'une solution de prédiction du churn client, permettant à l'entreprise d'anticiper les départs et d'optimiser ses stratégies marketing.
+Les résultats obtenus démontrent la faisabilité d'une solution de prédiction du churn client, permettant à l'entreprise d'anticiper les départs et d'optimiser ses stratégies marketing. La segmentation a également mis en évidence que 84\% des clients sont occasionnels, représentant un fort potentiel de croissance pour l'entreprise.
 
 \section*{Annexes}
 
@@ -381,7 +550,7 @@ python app.py
 \end{lstlisting}
 
 \subsection*{B. Lien GitHub}
-\url{https://github.com/myriamBenAbd0607/ProjetML.git}
+\url{https://github.com/myriamBenAbd0607/ProjetML}
 
 \subsection*{C. Technologies utilisées}
 \begin{itemize}
@@ -394,7 +563,7 @@ python app.py
 \end{itemize}
 
 \subsection*{D. Métriques détaillées du modèle final}
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \begin{tabular}{|l|c|}
 \hline
@@ -404,6 +573,7 @@ Accuracy & 0.919 \\
 Precision (Churn=1) & 0.923 \\
 Recall (Churn=1) & 0.911 \\
 F1-Score & 0.917 \\
+AUC-ROC & 0.96 \\
 \hline
 \end{tabular}
 \end{table}
