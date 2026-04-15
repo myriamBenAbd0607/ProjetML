@@ -18,8 +18,10 @@
 \usepackage{listings}
 \usepackage{tcolorbox}
 \usepackage{amssymb}
-\usepackage{subcaption}
 \usepackage{float}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{multirow}
 
 \geometry{margin=2cm}
 \pagestyle{fancy}
@@ -38,6 +40,8 @@
 \definecolor{backcolour}{RGB}{248,248,248}
 \definecolor{warningred}{RGB}{231, 76, 60}
 \definecolor{successgreen}{RGB}{46, 204, 113}
+\definecolor{infoBlue}{RGB}{52, 152, 219}
+\definecolor{darkBlue}{RGB}{41, 65, 114}
 
 \lstdefinestyle{mystyle}{
     backgroundcolor=\color{backcolour},   
@@ -75,6 +79,10 @@
 {\color{accentorange}\normalfont\large\bfseries}
 {\thesubsection}{1em}{}
 
+\titleformat{\subsubsection}
+{\color{darkBlue}\normalfont\normalsize\bfseries}
+{\thesubsubsection}{1em}{}
+
 \newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 
@@ -96,9 +104,7 @@
 \vspace{1cm}
 {\large Atelier Pratique : E-commerce de Cadeaux}\par
 \vspace{2cm}
-{\large \textbf{Préparé par : BEN ABDALLAH MARIEM}}\par
-\vspace{1cm}
-{\large \textbf{\textbf{Enseignant :} & \textsc{Drira Fadoua}}
+{\large \textbf{Préparé par Mariem Ben Abdallah}}
 \vspace{3cm}
 
 \begin{tikzpicture}
@@ -106,6 +112,8 @@
 \end{tikzpicture}
 
 \vspace{2cm}
+
+{\large \textbf{Encadrante : Fadoua Drira}}
 
 \vspace{5cm}
 
@@ -121,461 +129,807 @@
 \section{Introduction et Contexte}
 
 \subsection{Présentation du projet}
-Ce projet a été réalisé dans le cadre de l'atelier Machine Learning. L'objectif est de développer une solution complète d'analyse comportementale pour une entreprise e-commerce spécialisée dans la vente de cadeaux. À partir d'une base de données clients de 4 372 individus comportant 52 caractéristiques, nous avons construit un modèle capable de prédire le risque de départ (churn) et proposé une segmentation marketing.
+Ce projet s'inscrit dans le cadre de l'atelier pratique du module Machine Learning. 
+L'objectif est de réaliser une \textbf{analyse comportementale complète} de la clientèle 
+d'une entreprise e-commerce spécialisée dans la vente de cadeaux.
 
-\subsection{Objectifs}
-\begin{itemize}
-    \item Analyser le comportement des clients pour mieux comprendre leurs habitudes d'achat
-    \item Prédire le risque de départ des clients (churn)
-    \item Développer un modèle de classification performant
-    \item Segmenter la clientèle pour des actions marketing ciblées
-    \item Créer une interface utilisateur pour la prédiction en temps réel
+Le projet suit une méthodologie rigoureuse couvrant l'ensemble de la chaîne de traitement 
+en data science : de l'exploration des données brutes jusqu'au déploiement d'une application 
+web interactive.
+
+\subsection{Objectifs métier}
+L'entreprise e-commerce souhaite mieux comprendre sa clientèle pour :
+\begin{itemize}[label={\color{headerblue}\textbullet}]
+    \item \textbf{Personnaliser} ses stratégies marketing (offres ciblées, communications adaptées)
+    \item \textbf{Réduire} le taux de départ des clients (churn) en anticipant les départs
+    \item \textbf{Optimiser} son chiffre d'affaires en fidélisant les clients à forte valeur
+    \item \textbf{Anticiper} les comportements à risque pour agir avant le départ
 \end{itemize}
 
-\section{Exploration et Préparation des Données}
-
-\subsection{Structure des données}
-Le jeu de données comprend :
+\subsection{Objectifs pédagogiques}
+\begin{tcolorbox}[title=�� Compétences développées]
+Ce projet couvre l'ensemble de la chaîne de traitement en data science :
+\begin{multicols}{2}
 \begin{itemize}
-    \item \textbf{4 372 clients}
-    \item \textbf{52 features} initiales
-    \item Types de données : 20 colonnes int64, 14 colonnes float64, 18 colonnes object
+    \item Exploration des données
+    \item Préparation et nettoyage
+    \item Feature engineering
+    \item Transformation (ACP)
+    \item Modélisation (Clustering, Classification)
+    \item Évaluation et interprétation
+    \item Optimisation des hyperparamètres
+    \item Déploiement (Flask)
 \end{itemize}
-
-\subsection{Statistiques descriptives}
-L'analyse des principales features numériques révèle une grande hétérogénéité des comportements clients. Certains clients sont très actifs avec des dépenses élevées, tandis que d'autres sont inactifs depuis plusieurs mois. Le tableau ci-dessous présente les statistiques clés.
-
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|c|c|c|c|}
-\hline
-\textbf{Feature} & \textbf{Min} & \textbf{Max} & \textbf{Moyenne} & \textbf{Médiane} \\
-\hline
-Recency (jours) & 1 & 374 & 92 & 50 \\
-Frequency (achats) & 1 & 248 & 5 & 3 \\
-MonetaryTotal (£) & -4 287 & 279 489 & 1 898 & 648 \\
-\hline
-\end{tabular}
-\caption{Statistiques descriptives des principales features numériques}
-\end{table}
-
-On observe que la distribution est très asymétrique : la moyenne est souvent supérieure à la médiane, ce qui indique la présence de clients très actifs (\"super clients\") qui tirent les moyennes vers le haut.
-
-\subsection{Analyse de la variable cible (Churn)}
-La variable cible représente le départ du client. Le jeu de données est relativement équilibré, avec une légère dominance des clients fidèles.
-
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|c|c|}
-\hline
-\textbf{Classe} & \textbf{Nombre} & \textbf{Pourcentage} \\
-\hline
-Fidèle (Churn = 0) & 2 800 & 64.0\% \\
-Parti (Churn = 1) & 1 572 & 36.0\% \\
-\hline
-\end{tabular}
-\caption{Répartition de la variable cible}
-\end{table}
-
-\subsection{Valeurs manquantes et codes spéciaux}
-Plusieurs colonnes présentaient des valeurs manquantes ou des codes spéciaux qu'il a fallu traiter.
-
-\subsubsection{Valeurs manquantes}
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|c|c|}
-\hline
-\textbf{Colonne} & \textbf{Manquantes} & \textbf{Traitement} \\
-\hline
-Age & 1 311 (30\%) & Imputation par la médiane \\
-AvgDaysBetweenPurchases & 79 (1.8\%) & Remplacement par 0 \\
-\hline
-\end{tabular}
-\end{table}
-
-\subsubsection{Codes spéciaux}
-Certaines colonnes utilisaient des codes spécifiques (-1, 999, 99) pour indiquer des valeurs aberrantes ou manquantes. Ces codes ont été remplacés par des valeurs par défaut cohérentes.
-
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|c|c|}
-\hline
-\textbf{Colonne} & \textbf{Codes spéciaux} & \textbf{Traitement} \\
-\hline
-SupportTicketsCount & -1 (43), 999 (87) & Remplacement par médiane (2.0) \\
-SatisfactionScore & -1 (115), 0 (120), 99 (114) & Remplacement par médiane (3.0) \\
-\hline
-\end{tabular}
-\end{table}
-
-\subsubsection{Valeurs négatives}
-Une analyse plus fine a révélé que 44 clients (soit 1\% de la base) présentent un MonetaryTotal négatif. Ces clients ont un ReturnRatio moyen de 87\%, contre seulement 3\% pour l'ensemble des clients. Cela correspond à des cas réels de retours et remboursements. \textbf{Nous avons choisi de conserver ces valeurs} car elles représentent une réalité métier que le modèle doit apprendre à gérer.
-
-\subsection{Traitement des dates}
-La colonne RegistrationDate contenait des formats de date inconsistants (ex: "12/03/10", "2010-03-12", "10/18/2010"). Nous avons uniformisé ces formats et converti les dates en timestamps pour les rendre exploitables par le modèle.
-
-\begin{itemize}
-    \item Parsing de \texttt{RegistrationDate} avec \texttt{pd.to\_datetime()}
-    \item Conversion en timestamp (secondes depuis 1970)
-    \item Extraction de nouvelles features : RegYear, RegMonth, RegDay, RegWeekday
-\end{itemize}
-
-\subsection{Encodage des variables catégorielles}
-Les variables catégorielles (type de client, région, segment RFM, etc.) ont été transformées via un encodage one-hot. Cette opération a considérablement augmenté le nombre de features.
-
-\begin{itemize}
-    \item 18 variables catégorielles initiales
-    \item \textbf{4 326 features} après One-Hot Encoding
-    \item Suppression de \texttt{NewsletterSubscribed} (valeur constante "Yes")
-\end{itemize}
-
-\subsection{Normalisation}
-Application d'un \texttt{StandardScaler} sur les colonnes numériques (moyenne=0, écart-type=1). Les colonnes booléennes issues de l'encodage one-hot ne sont pas normalisées car elles sont déjà sur une échelle [0,1].
-
-\subsection{Récapitulatif final}
-Après toutes ces étapes de préparation, le jeu de données est prêt pour la modélisation.
-
-\begin{itemize}
-    \item \textbf{Shape finale :} 4 372 lignes, 55 colonnes (avant encodage)
-    \item \textbf{Valeurs manquantes :} 0
-    \item \textbf{Codes spéciaux :} 0
-    \item \textbf{Features après encodage :} 4 326
-\end{itemize}
-
-\section{Modélisation}
-
-\subsection{Séparation Train/Test}
-Les données ont été divisées en ensemble d'entraînement (80\%) et de test (20\%) en préservant la proportion de churn (stratification).
-
-\begin{verbatim}
-X_train shape: (3 497, 4 326)
-X_test shape: (875, 4 326)
-y_train shape: (3 497,)
-y_test shape: (875,)
-\end{verbatim}
-
-\subsection{Comparaison des modèles testés}
-Plusieurs algorithmes de classification ont été testés et comparés. L'arbre de décision a montré un excellent score (100\%) mais souffre de surapprentissage. Le Random Forest a été retenu pour sa robustesse et ses performances équilibrées.
-
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|c|c|c|c|}
-\hline
-\textbf{Modèle} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} \\
-\hline
-KNN & 90.9\% & 97.7\% & 74.2\% & 0.84 \\
-Arbre de décision & 100.0\% & 100.0\% & 100.0\% & 1.00 \\
-Random Forest & 99.3\% & 99.3\% & 99.3\% & 0.99 \\
-\textbf{Gradient Boosting} & \textbf{91.9\%} & \textbf{92.3\%} & \textbf{91.1\%} & \textbf{0.92} \\
-\hline
-\end{tabular}
-\caption{Comparaison des performances des modèles testés}
-\end{table}
-
-\textbf{Remarque :} L'arbre de décision montre un surapprentissage (100\% sur test). Le Random Forest a été retenu pour sa robustesse.
-
-\subsection{Optimisation des hyperparamètres}
-Pour obtenir les meilleures performances, nous avons utilisé GridSearchCV qui teste systématiquement différentes combinaisons d'hyperparamètres et sélectionne la meilleure via validation croisée.
-
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|c|}
-\hline
-\textbf{Paramètre} & \textbf{Valeur optimale} \\
-\hline
-n\_estimators & 200 \\
-max\_depth & 10 \\
-min\_samples\_split & 10 \\
-min\_samples\_leaf & 5 \\
-random\_state & 42 \\
-\hline
-\end{tabular}
-\caption{Hyperparamètres optimisés par GridSearchCV}
-\end{table}
-
-\subsection{Modèle choisi : Random Forest}
-Après comparaison, le modèle \textbf{Random Forest} a été retenu pour sa robustesse face au surapprentissage et ses excellentes performances.
-
-\subsection{Évaluation des performances}
-Le modèle final atteint une exactitude de 91.9\%, ce qui signifie qu'il prédit correctement le statut (fidèle ou parti) pour 9 clients sur 10. Les métriques de précision et de rappel sont également très satisfaisantes.
-
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|c|}
-\hline
-\textbf{Métrique} & \textbf{Valeur} \\
-\hline
-Exactitude (Accuracy) & \textbf{91.9\%} \\
-Précision (Precision) & 92.3\% \\
-Rappel (Recall) & 91.1\% \\
-F1-Score & 91.7\% \\
-AUC-ROC & 0.96 \\
-\hline
-\end{tabular}
-\caption{Performances du modèle sur les données de test}
-\end{table}
-
-\subsection{Matrice de confusion}
-La matrice de confusion détaille les erreurs du modèle. On observe que le modèle confond rarement les clients fidèles avec des clients à risque.
-
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|c|c|}
-\hline
- & \textbf{Prédit Fidèle} & \textbf{Prédit Parti} \\
-\hline
-\textbf{Réel Fidèle} & 2 560 & 240 \\
-\textbf{Réel Parti} & 137 & 1 435 \\
-\hline
-\end{tabular}
-\caption{Matrice de confusion - Analyse des erreurs}
-\end{table}
-
-\subsection{Courbe ROC}
-L'AUC (Area Under Curve) de 0.96 indique une excellente capacité du modèle à distinguer les clients fidèles des clients à risque. Une AUC proche de 1 signifie que le modèle est très performant.
-
-\subsection{Features les plus importantes}
-L'analyse de l'importance des features révèle que la récence (dernier achat) est le facteur le plus prédictif, suivi du type de client et de la fréquence d'achat.
-
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|c|}
-\hline
-\textbf{Feature} & \textbf{Importance} \\
-\hline
-Recency & 9.20\% \\
-CustomerType\_Perdu & 7.36\% \\
-ChurnRiskCategory\_Faible & 5.93\% \\
-Frequency & 5.21\% \\
-MonetaryTotal & 4.87\% \\
-\hline
-\end{tabular}
-\caption{Top 5 des features les plus importantes}
-\end{table}
-
-\subsection{Interprétation métier}
-\begin{itemize}
-    \item \textbf{Recency (9.20\%)} : Un client qui n'a pas acheté depuis plus de 90 jours a un risque de churn multiplié par 3. La stratégie recommandée est d'envoyer une offre personnalisée avant 60 jours d'inactivité.
-    \item \textbf{CustomerType (7.36\%)} : Les clients de type "Perdu" ont un taux de churn de 50\%, contre seulement 3\% pour les "Hyperactifs". La stratégie de réactivation doit être adaptée à chaque profil.
-    \item \textbf{Frequency (5.21\%)} : La fidélisation passe par l'augmentation de la fréquence d'achat via des programmes de fidélité.
-\end{itemize}
-
-\section{Segmentation Client (K-Means)}
-
-\subsection{Résultats de l'ACP}
-L'analyse en composantes principales (ACP) a été appliquée pour réduire la dimensionnalité des données tout en conservant l'essentiel de l'information.
-
-\begin{itemize}
-    \item Variance expliquée par CP1 : 18.5\%
-    \item Variance expliquée par CP2 : 13.2\%
-    \item Variance totale conservée : 31.7\%
-\end{itemize}
-
-\subsection{Détermination du nombre de clusters}
-La méthode du coude (Elbow Method) a été utilisée pour déterminer le nombre optimal de segments. Le graphique montre une forte diminution de l'inertie jusqu'à k=4, puis la courbe s'aplatit. Nous avons donc choisi \textbf{4 segments}.
-
-\subsection{Résultats de la segmentation}
-La segmentation a identifié 4 groupes de clients aux comportements très distincts.
-
-\begin{table}[H]
-\centering
-\caption{Segmentation clientèle - Profils et recommandations}
-\begin{tabular}{|c|c|c|c|c|c|c|}
-\hline
-\textbf{Segment} & \textbf{Clients} & \textbf{Churn} & \textbf{Recency} & \textbf{Frequency} & \textbf{Monetary} & \textbf{Profil} \\
-\hline
-\textbf{Cluster 0} & 547 (15.6\%) & 3.3\% & 22 j & 15.0 & 5 699 € & VIP - Achats fréquents \\
-\hline
-\textbf{Cluster 1} & 2 (0.1\%) & 50.0\% & 164 j & 2.5 & 1 € & Risque élevé - Inactifs \\
-\hline
-\textbf{Cluster 2} & 2 936 (84.0\%) & 39.0\% & 106 j & 2.9 & 830 € & Occasionnels \\
-\hline
-\textbf{Cluster 3} & 12 (0.3\%) & 0.0\% & 5 j & 107.8 & 93 293 € & Super VIP \\
-\hline
-\end{tabular}
-\end{table}
-
-\subsection{Distribution des clusters}
-Le graphique ci-dessous montre la répartition des clients par segment. On observe que la grande majorité des clients (84\%) sont des clients occasionnels, ce qui représente un fort potentiel de croissance.
-
-\begin{figure}[H]
-\centering
-% \includegraphics[width=0.7\textwidth]{../notebooks/images/cluster_distribution.png}
-\caption{Distribution des clients par cluster (à ajouter)}
-\label{fig:cluster_dist}
-\end{figure}
-
-\subsection{Recommandations marketing par segment}
-\begin{itemize}
-    \item \textbf{Cluster 0 (VIP - 547 clients)} : Programme de parrainage, offres exclusives, accès anticipé aux nouveautés. Ces clients représentent une valeur stratégique.
-    \item \textbf{Cluster 1 (Risque élevé - 2 clients)} : Contact personnalisé prioritaire, offre de fidélisation urgente, analyse des causes de désengagement.
-    \item \textbf{Cluster 2 (Occasionnels - 2 936 clients)} : Newsletter engageante, recommandations produits personnalisées, programme de points.
-    \item \textbf{Cluster 3 (Super VIP - 12 clients)} : Programme de fidélité premium, avantages exclusifs, événements privés. Ces clients sont les ambassadeurs de la marque.
-\end{itemize}
-
-\section{Déploiement}
-
-\subsection{Application Flask}
-Une interface web a été développée avec Flask pour permettre la prédiction en temps réel du risque de churn.
-
-\subsubsection{Fonctionnalités}
-\begin{itemize}
-    \item Formulaire de saisie des données client (Recency, Frequency, Monetary, Age)
-    \item Prédiction instantanée du risque de départ avec probabilité
-    \item Recommandations personnalisées selon le niveau de risque
-    \item Interface responsive (adaptée aux mobiles et desktop)
-\end{itemize}
-
-\subsubsection{Structure de l'application}
-\begin{lstlisting}[language=bash, caption=Arborescence de l'application]
-app/
-├── app.py              # Application Flask
-└── templates/
-    └── index.html      # Interface utilisateur
-
-models/
-├── random_forest_churn.pkl   # Modèle entraîné (91.9%)
-├── scaler.pkl                # Normaliseur
-└── feature_indices.pkl       # Indices des colonnes
-\end{lstlisting}
-
-\subsection{Exemples de prédiction}
-Voici trois exemples de prédiction illustrant le comportement du modèle selon le profil du client.
-
-\begin{tcolorbox}[title=Test 1 : Client fidèle, colback=successgreen!10]
-\textbf{Données saisies :}
-\begin{itemize}
-    \item Recency : 2 jours
-    \item Frequency : 20 achats
-    \item Monetary : 2 000 £
-    \item Age : 35 ans
-\end{itemize}
-\textbf{Résultat :} RISQUE MODÉRÉ (41,6\%)
-\textbf{Recommandation :} Programme de fidélité
+\end{multicols}
 \end{tcolorbox}
 
-\begin{tcolorbox}[title=Test 2 : Client à risque, colback=warningred!10]
-\textbf{Données saisies :}
-\begin{itemize}
-    \item Recency : 300 jours
-    \item Frequency : 1 achat
-    \item Monetary : 50 £
-    \item Age : 28 ans
-\end{itemize}
-\textbf{Résultat :} RISQUE ÉLEVÉ (52,0\%)
-\textbf{Recommandation :} Offre personnalisée urgente
-\end{tcolorbox}
-
-\begin{tcolorbox}[title=Test 3 : Client dormant, colback=warningred!10]
-\textbf{Données saisies :}
-\begin{itemize}
-    \item Recency : 365 jours
-    \item Frequency : 1 achat
-    \item Monetary : 25 £
-    \item Age : 60 ans
-\end{itemize}
-\textbf{Résultat :} RISQUE ÉLEVÉ (51,9\%)
-\textbf{Recommandation :} Campagne de réactivation
-\end{tcolorbox}
-
-\section{Résultats et Recommandations}
-
-\subsection{Principaux enseignements}
+\subsection{Structure du rapport}
+Ce rapport est organisé en plusieurs sections :
 \begin{enumerate}
-    \item La \textbf{date du dernier achat (Recency)} est le facteur le plus prédictif du churn (9.20\%). Plus un client est inactif longtemps, plus le risque augmente.
-    \item La \textbf{fréquence d'achat (Frequency)} est le deuxième facteur clé. Les clients qui achètent régulièrement sont naturellement plus fidèles.
-    \item Le modèle atteint une précision de \textbf{91.9\%}, ce qui est suffisant pour un déploiement en production.
-    \item La segmentation a identifié 4 groupes distincts : 84\% des clients sont occasionnels, représentant un fort potentiel de croissance.
-    \item Les clients ayant effectué des retours (ReturnRatio élevé) présentent un risque de churn plus important.
+    \item \textbf{Exploration des données} : analyse statistique, valeurs manquantes, visualisations
+    \item \textbf{Préparation des données} : nettoyage, feature engineering, encodage
+    \item \textbf{Modélisation} : entraînement et comparaison de 4 modèles
+    \item \textbf{Segmentation clientèle} : ACP et K-means pour identifier des profils
+    \item \textbf{Déploiement} : application Flask et API REST
+    \item \textbf{Conclusion} : bilan des résultats et perspectives
 \end{enumerate}
 
-\subsection{Recommandations marketing}
+\newpage
+\section{Exploration et Analyse des Données}
+
+\subsection{Présentation du dataset}
+Le jeu de données fourni contient \textbf{4 372 clients} et \textbf{52 features}. 
+Il s'agit de données intentionnellement imparfaites (valeurs manquantes, outliers, 
+features redondantes) pour nous permettre de maîtriser l'ensemble des étapes de 
+prétraitement.
+
+\begin{tcolorbox}[title=�� Structure des données]
+\begin{tabular}{L{4cm} C{3cm} C{3cm}}
+\toprule
+\textbf{Type de features} & \textbf{Nombre} & \textbf{Exemples} \\
+\midrule
+Numériques & 34 & Recency, Frequency, Monetary, Age \\
+Catégorielles & 18 & RFMSegment, CustomerType, Region \\
+\bottomrule
+\end{tabular}
+\end{tcolorbox}
+
+\subsection{Analyse des types de données}
+Nous avons commencé par analyser la structure du dataset :
 \begin{itemize}
-    \item \textbf{Cibler les clients à risque élevé} : Envoyer des offres personnalisées aux clients identifiés avec probabilité > 70\%
-    \item \textbf{Réactiver les clients dormants} : Campagne d'emailing ciblée après 60 jours d'inactivité
-    \item \textbf{Fidéliser les clients VIP} : Programme de fidélité avec avantages exclusifs
-    \item \textbf{Suivi des clients occasionnels} : Newsletter engageante, recommandations produits personnalisées
+    \item \textbf{Features numériques} : variables quantitatives (RFM, quantités, ratios)
+    \item \textbf{Features catégorielles} : segments clients, préférences, statuts
+    \item \textbf{Features temporelles} : dates d'inscription, dernières connexions
+    \item \textbf{Variable cible} : \texttt{Churn} (0 = fidèle, 1 = partant)
 \end{itemize}
 
-\section{Limites et Perspectives}
+\subsection{Valeurs manquantes}
+L'analyse des valeurs manquantes a révélé :
 
-\subsection{Limites du modèle}
-Malgré de bonnes performances, notre solution présente certaines limites :
+\begin{table}[H]
+\centering
+\begin{tabular}{L{5cm} C{2.5cm} C{2.5cm}}
+\toprule
+\textbf{Colonne} & \textbf{Manquantes} & \textbf{Pourcentage} \\
+\midrule
+Age & 1 311 & 29.99\% \\
+AvgDaysBetweenPurchases & 79 & 1.81\% \\
+\bottomrule
+\end{tabular}
+\caption{Valeurs manquantes par colonne}
+\end{table}
+
+\textbf{Interprétation :}
 \begin{itemize}
-    \item \textbf{Données limitées} : 4 372 clients seulement, ce qui limite la généralisation du modèle à d'autres populations
-    \item \textbf{Features manquantes} : Absence de données comportementales web (pages vues, temps passé sur le site)
-    \item \textbf{Seuil statique} : Le seuil de décision (0.5) n'est pas optimisé pour le coût métier (un faux négatif coûte plus cher qu'un faux positif)
-    \item \textbf{Application simplifiée} : Seules 4 features sont utilisées dans l'interface par souci de simplicité
-    \item \textbf{Déséquilibre des segments} : Certains segments sont très petits (2 clients pour le cluster 1)
+    \item Les 79 clients sans délai entre achats sont ceux qui n'ont effectué \textbf{qu'un seul achat} (Frequency=1)
+    \item L'âge manque pour environ 30\% des clients → nécessite une imputation
+\end{itemize}
+
+\subsection{Valeurs aberrantes et codes spéciaux}
+Certaines colonnes contiennent des valeurs spéciales qui ne sont pas des erreurs mais 
+des codes métier :
+
+\begin{itemize}
+    \item \textbf{SupportTicketsCount} : valeurs -1 (code pour "non applicable") et 999 (code pour "trop élevé")
+    \item \textbf{SatisfactionScore} : valeurs -1, 0, 99 (codes spéciaux pour "non renseigné")
+    \item \textbf{MonetaryTotal négatif} : 44 clients avec dépense totale négative (retours/annulations)
+\end{itemize}
+
+\subsection{Feature Engineering réalisé}
+Pour enrichir notre jeu de données, nous avons créé de nouvelles features :
+
+\begin{tcolorbox}[title=✨ Nouvelles features créées]
+\begin{itemize}
+    \item \texttt{HasNegativeMonetary} : flag binaire indiquant si le client a une dépense négative
+    \item \texttt{RegYear, RegMonth, RegDay, RegWeekday} : extraction depuis la date d'inscription
+    \item \texttt{IP\_IsPrivate} : indique si l'adresse IP est privée (1) ou publique (0)
+    \item \texttt{IP\_Class} : classe de l'adresse IP (A, B, C, Other)
+    \item \texttt{IP\_FirstOctet} : premier octet de l'adresse IP
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Visualisations exploratoires}
+Plusieurs visualisations ont été réalisées pour comprendre la distribution des données :
+
+\begin{itemize}
+    \item Distribution du MonetaryTotal (dépense totale)
+    \item Corrélation entre les features numériques (heatmap)
+    \item Taux de churn par mois d'inscription
+    \item Répartition des clients par catégorie d'âge et de dépense
+\end{itemize}
+
+\newpage
+\section{Préparation des Données}
+
+\subsection{Nettoyage des données}
+Le nettoyage a consisté à :
+\begin{itemize}
+    \item \textbf{Supprimer les colonnes constantes} : NewsletterSubscribed = "Yes" pour 100\% des clients
+    \item \textbf{Parser les dates} : conversion de RegistrationDate en format datetime
+    \item \textbf{Corriger les types} : s'assurer que chaque colonne a le bon type
+    \item \textbf{Supprimer les identifiants} : CustomerID retiré (non prédictif)
+\end{itemize}
+
+\subsection{Suppression des features leakantes — Point critique}
+Une attention particulière a été portée à l'identification et la suppression des 
+features causant du \textbf{data leakage}. Le data leakage se produit lorsqu'une 
+feature utilise une information qui ne serait pas disponible au moment de la prédiction.
+
+\begin{tcolorbox}[title=⚠️ Features leakantes supprimées, colback=warningred!10]
+\begin{itemize}
+    \item \texttt{ChurnRiskCategory, RFMSegment, CustomerType, LoyaltyLevel} 
+    → construites APRÈS avoir défini le churn (leakage direct)
+    \item \texttt{FirstPurchaseDaysAgo, CustomerTenureDays} 
+    → calculées sur la même période que le label (leakage temporel)
+    \item \texttt{Recency} 
+    → corrélation de 0.859 avec le churn (donnerait une précision artificielle de 100\%)
+    \item \texttt{PreferredMonth, AvgDaysBetweenPurchases}
+    → dérivées des mêmes informations temporelles
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Gestion de la multicolinéarité}
+La multicolinéarité désigne une forte corrélation entre plusieurs variables explicatives. 
+Cela peut poser problème pour certains modèles (régression linéaire, logistique).
+
+\textbf{Méthode utilisée :}
+\begin{enumerate}
+    \item Calcul de la matrice de corrélation
+    \item Identification des paires avec |corrélation| > 0.8
+    \item Suppression d'une feature par paire redondante
+\end{enumerate}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{L{5cm} C{4cm} C{2cm}}
+\toprule
+\textbf{Feature 1 (conservée)} & \textbf{Feature 2 (supprimée)} & \textbf{Corrélation} \\
+\midrule
+Frequency & UniqueInvoices & 1.000 \\
+UniqueProducts & UniqueDescriptions & 0.999 \\
+MonetaryMin & MonetaryMax & -0.994 \\
+MonetaryTotal & TotalQuantity & 0.922 \\
+\bottomrule
+\end{tabular}
+\caption{Paires de features fortement corrélées}
+\end{table}
+
+\textbf{Résultat :} 7 features redondantes supprimées.
+
+\subsection{Split Train/Test}
+Le split des données est une étape cruciale pour évaluer correctement les performances 
+d'un modèle sur des données jamais vues.
+
+\begin{tcolorbox}[title=✅ Split réalisé]
+\begin{itemize}
+    \item Proportion : 80\% train / 20\% test
+    \item Méthode : train\_test\_split avec random\_state=42 (reproductibilité)
+    \item Stratification : sur la variable Churn (préserve la proportion des classes)
+    \item Résultat : 3 497 clients en train, 875 en test
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Imputation des valeurs manquantes — Correction critique}
+L'imputation des valeurs manquantes doit être effectuée \textbf{APRÈS} le split pour 
+éviter tout data leakage.
+
+\begin{tcolorbox}[title=�� Bonne pratique respectée]
+\begin{enumerate}
+    \item Split Train/Test
+    \item Identification des colonnes avec NaN dans X\_train
+    \item SimpleImputer fit sur X\_train uniquement (stratégie = médiane)
+    \item Transformation de X\_train et X\_test avec le même imputer
+\end{enumerate}
+\end{tcolorbox}
+
+\textbf{Colonne imputée :} Age (1311 valeurs manquantes) → remplacées par la médiane.
+
+\subsection{Encodage des variables catégorielles}
+Les modèles de machine learning ne peuvent pas traiter directement les variables 
+textuelles. Nous avons donc appliqué un \textbf{One-Hot Encoding}.
+
+\begin{itemize}
+    \item \textbf{12 variables catégorielles} encodées
+    \item \textbf{drop\_first=True} pour éviter la multicolinéarité
+    \item Nombre total de features après encodage : \textbf{103}
+\end{itemize}
+
+\textbf{Attention particulière :} Certaines catégories présentes uniquement dans 
+le train (ex: Country\_Brazil, Region\_Amérique du Nord) ont été remplies avec 0 
+dans le test.
+
+\subsection{Normalisation des données}
+Pour les modèles sensibles aux échelles (KNN, SVM), nous avons normalisé les données 
+avec \textbf{StandardScaler}.
+
+\begin{tcolorbox}[title=�� Normalisation après split]
+\begin{itemize}
+    \item StandardScaler fit sur X\_train\_encoded uniquement
+    \item Transformation de X\_train\_encoded et X\_test\_encoded
+    \item Sauvegarde du scaler pour l'application Flask
+\end{itemize}
+\end{tcolorbox}
+
+\newpage
+\section{Modélisation}
+
+\subsection{Stratégie de modélisation}
+Nous avons choisi de tester \textbf{4 modèles} aux architectures différentes pour 
+comparer leurs performances et sélectionner le meilleur :
+
+\begin{enumerate}
+    \item \textbf{KNN} : modèle non paramétrique basé sur la proximité
+    \item \textbf{Arbre de Décision} : modèle interprétable
+    \item \textbf{Random Forest} : ensemble d'arbres (bagging)
+    \item \textbf{Gradient Boosting} : ensemble séquentiel (boosting)
+\end{enumerate}
+
+\subsection{Modèle 1 : KNN (K-Nearest Neighbors)}
+
+\subsubsection{Principe}
+Le KNN classe un nouveau client en fonction des k clients les plus proches dans 
+l'espace des features. C'est un modèle non paramétrique qui ne fait pas d'hypothèse 
+sur la distribution des données.
+
+\subsubsection{Optimisation réalisée}
+Le KNN a bénéficié d'une optimisation poussée avec 3 stratégies :
+
+\begin{enumerate}
+    \item \textbf{SelectKBest} : sélection des 20 meilleures features (test de Fisher)
+    \item \textbf{PCA} : réduction de dimension (testée mais moins performante)
+    \item \textbf{SelectKBest + PCA} : combinaison des deux approches
+\end{enumerate}
+
+\textbf{Paramètres optimaux trouvés :}
+\begin{itemize}
+    \item Nombre de voisins (k) : 15
+    \item Poids : distance (les voisins proches ont plus d'influence)
+    \item Métrique : Manhattan
+    \item Features sélectionnées : 20 meilleures
+\end{itemize}
+
+\subsubsection{Résultats KNN}
+\begin{table}[H]
+\centering
+\begin{tabular}{L{3cm} C{3cm} C{3cm} C{2cm}}
+\toprule
+\textbf{Métrique} & \textbf{KNN Base} & \textbf{KNN Optimisé} & \textbf{Gain} \\
+\midrule
+Accuracy & 0.753 & 0.878 & +12.5\% \\
+Recall & 0.430 & 0.825 & +39.5\% \\
+F1-Score & 0.536 & 0.818 & +28.1\% \\
+ROC-AUC & 0.789 & 0.925 & +13.6\% \\
+\bottomrule
+\end{tabular}
+\caption{Amélioration du KNN après optimisation}
+\end{table}
+
+\subsection{Modèle 2 : Arbre de Décision}
+
+\subsubsection{Principe}
+L'arbre de décision segmente l'espace des features en régions homogènes selon la 
+variable cible. Il est très interprétable mais sujet au sur-apprentissage.
+
+\subsubsection{Optimisation réalisée}
+\begin{itemize}
+    \item Critère : entropie
+    \item Contrainte : max\_depth=5 (pour éviter le sur-apprentissage)
+    \item Class\_weight = 'balanced' (gestion du déséquilibre)
+    \item Min\_samples\_split = 20, min\_samples\_leaf = 10
+\end{itemize}
+
+\begin{tcolorbox}[title=�� Impact de la profondeur maximale]
+\begin{tabular}{L{4cm} C{3cm} C{3cm}}
+\toprule
+& \textbf{Sans contrainte} & \textbf{max\_depth=5} \\
+\midrule
+Profondeur & 18 & 5 \\
+Accuracy Train & 1.000 & 0.874 \\
+Accuracy Test & 0.839 & 0.864 \\
+Écart & 16.1\% & 1.0\% \\
+\bottomrule
+\end{tabular}
+\end{tcolorbox}
+
+\subsubsection{Résultats Arbre de Décision}
+\begin{itemize}
+    \item \textbf{F1-Score} : 0.819
+    \item \textbf{Recall} : 0.924 (le meilleur parmi tous les modèles !)
+    \item \textbf{ROC-AUC} : 0.944
+\end{itemize}
+
+L'arbre de décision détecte \textbf{92.4\% des clients partants} — excellent pour 
+une stratégie de fidélisation préventive.
+
+\subsection{Modèle 3 : Random Forest}
+
+\subsubsection{Principe}
+La Random Forest construit de nombreux arbres de décision sur des échantillons 
+bootstrappés et agrège leurs prédictions. Cela réduit la variance et améliore 
+la généralisation.
+
+\subsubsection{Paramètres utilisés}
+\begin{itemize}
+    \item n\_estimators = 200 arbres
+    \item max\_depth = 10
+    \item min\_samples\_split = 10
+    \item max\_features = 'sqrt'
+    \item class\_weight = 'balanced'
+    \item oob\_score = True (validation out-of-bag)
+\end{itemize}
+
+\subsubsection{Résultats Random Forest}
+\begin{itemize}
+    \item \textbf{F1-Score} : 0.783
+    \item \textbf{ROC-AUC} : 0.907
+    \item \textbf{OOB Score} : 0.845
+\end{itemize}
+
+\subsection{Modèle 4 : Gradient Boosting — Meilleur modèle}
+
+\subsubsection{Principe}
+Le Gradient Boosting construit les arbres séquentiellement : chaque nouvel arbre 
+corrige les erreurs du précédent. C'est souvent le modèle le plus performant sur 
+les données tabulaires.
+
+\subsubsection{Optimisation par GridSearchCV}
+Nous avons effectué une recherche d'hyperparamètres sur 3 dimensions :
+
+\begin{table}[H]
+\centering
+\begin{tabular}{L{4cm} C{3cm} C{3cm}}
+\toprule
+\textbf{Paramètre} & \textbf{Valeurs testées} & \textbf{Meilleure valeur} \\
+\midrule
+n\_estimators & 100, 200 & 200 \\
+learning\_rate & 0.01, 0.1, 0.2 & 0.01 \\
+max\_depth & 3, 5, 7 & 5 \\
+\bottomrule
+\end{tabular}
+\caption{GridSearchCV - Gradient Boosting}
+\end{table}
+
+\textbf{Validation croisée :} F1 moyen = 0.827 (5 folds)
+
+\subsubsection{Résultats Gradient Boosting}
+\begin{tcolorbox}[title=�� Modèle final retenu, colback=successgreen!10]
+\begin{itemize}
+    \item \textbf{F1-Score} : \textbf{0.8297}
+    \item \textbf{ROC-AUC} : \textbf{0.9471}
+    \item \textbf{Accuracy} : 89.3\%
+    \item \textbf{Precision} : 0.877
+    \item \textbf{Recall} : 0.787
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Top features importantes}
+L'analyse des importances des features du Gradient Boosting révèle :
+
+\begin{table}[H]
+\centering
+\begin{tabular}{L{5cm} C{3cm} C{3cm}}
+\toprule
+\textbf{Feature} & \textbf{Importance} & \textbf{Interprétation} \\
+\midrule
+FavoriteSeason\_Hiver & 22.4\% & Saison d'achat préférée \\
+FavoriteSeason\_Été & 20.0\% & Saison d'achat préférée \\
+Frequency & 19.6\% & Fréquence d'achat \\
+FavoriteSeason\_Printemps & 14.2\% & Saison d'achat préférée \\
+TotalTransactions & 9.0\% & Nombre total de transactions \\
+MonetaryTotal & 3.3\% & Dépense totale \\
+\bottomrule
+\end{tabular}
+\caption{Top 6 features importantes}
+\end{table}
+
+\begin{tcolorbox}[title=�� Analyse des features importantes, colback=infoBlue!10]
+\textbf{Observation :} Les features FavoriteSeason (Hiver, Été, Printemps) représentent 
+56.5\% de l'importance totale du modèle.
+
+\textbf{Explication possible :} Les données couvrent une période spécifique (2009-2011) 
+où la saison d'achat est corrélée avec la période de labellisation du churn. 
+Ce n'est pas nécessairement du leakage mais une corrélation spurieuse à mentionner 
+dans les limites du projet.
+\end{tcolorbox}
+
+\subsection{Tableau comparatif final}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{L{4cm} C{2.5cm} C{2.5cm} C{2.5cm} C{2.5cm}}
+\toprule
+\textbf{Modèle} & \textbf{Accuracy} & \textbf{Recall} & \textbf{F1-Score} & \textbf{ROC-AUC} \\
+\midrule
+\textbf{Gradient Boosting} & \textbf{0.8926} & 0.7869 & \textbf{0.8297} & \textbf{0.9471} \\
+Arbre Décision & 0.8640 & \textbf{0.9244} & 0.8189 & 0.9440 \\
+KNN Optimisé & 0.8777 & 0.8247 & 0.8177 & 0.9249 \\
+Random Forest & 0.8549 & 0.7869 & 0.7829 & 0.9071 \\
+\bottomrule
+\end{tabular}
+\caption{Comparaison des performances des modèles}
+\end{table}
+
+\subsection{Choix du modèle final}
+Nous retenons le \textbf{Gradient Boosting} comme modèle final pour les raisons suivantes :
+
+\begin{enumerate}
+    \item \textbf{Meilleur F1-Score} (0.83) : équilibre optimal entre précision et rappel
+    \item \textbf{Meilleur ROC-AUC} (0.947) : excellent pouvoir discriminant
+    \item \textbf{Meilleure Accuracy} (89.3\%) : plus de prédictions correctes
+    \item \textbf{Modèle robuste} : bien adapté aux données tabulaires complexes
+\end{enumerate}
+
+\newpage
+\section{Segmentation Clientèle (ACP + K-means)}
+
+\subsection{Objectif de la segmentation}
+La segmentation clientèle vise à identifier des groupes homogènes de clients pour 
+adapter les stratégies marketing. Nous utilisons une approche non supervisée 
+(ACP + K-means).
+
+\subsection{Prétraitement pour la segmentation}
+\begin{enumerate}
+    \item \textbf{Sélection des features numériques} : 27 colonnes conservées
+    \item \textbf{Imputation} : médiane pour les valeurs manquantes
+    \item \textbf{Normalisation} : StandardScaler (indispensable pour K-means)
+    \item \textbf{Retrait des outliers} : Z-score > 3 sur au moins une dimension
+\end{enumerate}
+
+\begin{tcolorbox}[title=�� Outliers détectés]
+\begin{itemize}
+    \item \textbf{Outliers identifiés} : 817 clients (23.4\% du dataset)
+    \item \textbf{Clients conservés} : 2 680 clients (76.6\%)
+    \item \textbf{Profil des outliers} : fréquence moyenne 7.7 achats, dépense moyenne 3842€
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Analyse en Composantes Principales (ACP)}
+
+\subsubsection{Principe}
+L'ACP est une technique de réduction de dimension qui transforme les variables 
+corrélées en variables indépendantes (composantes principales) tout en conservant 
+le maximum de variance.
+
+\subsubsection{Résultats de l'ACP}
+\begin{itemize}
+    \item \textbf{14 composantes} retenues pour expliquer 80\% de la variance
+    \item \textbf{20 composantes} nécessaires pour 95\% de la variance
+    \item Visualisation 2D possible pour l'interprétation
+\end{itemize}
+
+\subsection{Détermination du nombre de clusters (K-means)}
+
+\subsubsection{Principe de K-means}
+K-means partitionne les données en k clusters en minimisant la distance intra-cluster. 
+Chaque cluster est représenté par son centroïde.
+
+\subsubsection{Méthode du coude}
+Nous avons utilisé la méthode du coude (Elbow method) qui consiste à tracer l'inertie 
+en fonction du nombre de clusters k. Le "coude" indique le k optimal.
+
+\begin{itemize}
+    \item Test de k=2 à 10
+    \item Coude détecté autour de k=3 ou k=4
+    \item Analyse des tailles minimales : k=4 retenu (plus petit cluster = 222 clients, 8.3\%)
+\end{itemize}
+
+\subsection{Résultats de la segmentation}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{C{2cm} L{4cm} C{2cm} C{2cm} C{2cm}}
+\toprule
+\textbf{Cluster} & \textbf{Nom du segment} & \textbf{Taille} & \textbf{Churn} & \textbf{Profil} \\
+\midrule
+0 & Clients Réguliers & 222 (8.3\%) & 19.4\% & 6.1 achats, 1735£ \\
+1 & Occasionnels à Risque & 744 (27.8\%) & 29.7\% & 3.5 achats, 1121£ \\
+2 & Occasionnels à Risque & 747 (27.9\%) & 34.3\% & 2.9 achats, 902£ \\
+3 & Clients Réguliers & 967 (36.1\%) & 37.6\% & 5.7 achats, 1697£ \\
+- & Outliers & 817 (23.4\%) & 34.1\% & Analyse individuelle \\
+\bottomrule
+\end{tabular}
+\caption{Récapitulatif des segments clients}
+\end{table}
+
+\subsection{Interprétation des clusters}
+
+\subsubsection{Cluster 0 — Clients Réguliers (Risque faible)}
+\begin{itemize}
+    \item \textbf{Taille} : 222 clients (8.3\%)
+    \item \textbf{Taux de churn} : 19.4\% (le plus bas)
+    \item \textbf{Profil} : fréquence d'achat élevée (6.1), dépense importante (1735£)
+    \item \textbf{Action recommandée} : programme de fidélité, upselling, cross-selling
+\end{itemize}
+
+\subsubsection{Cluster 1 — Occasionnels à Risque modéré}
+\begin{itemize}
+    \item \textbf{Taille} : 744 clients (27.8\%)
+    \item \textbf{Taux de churn} : 29.7\%
+    \item \textbf{Profil} : fréquence moyenne (3.5), dépense modérée (1121£)
+    \item \textbf{Action recommandée} : newsletter ciblée, promotions personnalisées
+\end{itemize}
+
+\subsubsection{Cluster 2 — Occasionnels à Risque élevé}
+\begin{itemize}
+    \item \textbf{Taille} : 747 clients (27.9\%)
+    \item \textbf{Taux de churn} : 34.3\%
+    \item \textbf{Profil} : fréquence faible (2.9), dépense faible (902£)
+    \item \textbf{Action recommandée} : offres de réactivation urgentes
+\end{itemize}
+
+\subsubsection{Cluster 3 — Clients Réguliers (Risque élevé)}
+\begin{itemize}
+    \item \textbf{Taille} : 967 clients (36.1\%)
+    \item \textbf{Taux de churn} : 37.6\% (le plus élevé des clusters)
+    \item \textbf{Profil} : fréquence élevée (5.7) mais churn élevé (paradoxe)
+    \item \textbf{Action recommandée} : campagne anti-churn prioritaire
+\end{itemize}
+
+\subsubsection{Outliers — Cas atypiques}
+\begin{itemize}
+    \item \textbf{Taille} : 817 clients (23.4\%)
+    \item \textbf{Profil} : comportements extrêmes sur au moins une dimension
+    \item \textbf{Action recommandée} : analyse individuelle (pas de campagne marketing générique)
+\end{itemize}
+
+\newpage
+\section{Déploiement avec Flask}
+
+\subsection{Choix technologique}
+Flask a été choisi pour le déploiement car c'est un micro-framework Python :
+\begin{itemize}
+    \item Léger et flexible
+    \item Facile à intégrer avec Scikit-learn
+    \item Idéal pour créer des API REST
+    \item Parfait pour un projet académique
+\end{itemize}
+
+\subsection{Architecture de l'application}
+L'application Flask se compose de :
+\begin{enumerate}
+    \item \textbf{app.py} : le serveur backend
+    \item \textbf{templates/index.html} : l'interface utilisateur
+    \item \textbf{Modèles sauvegardés} : best\_model\_churn.pkl, scaler.pkl
+\end{enumerate}
+
+\subsection{API REST implémentée}
+\begin{tcolorbox}[title=�� Endpoints disponibles]
+\begin{tabular}{L{5cm} L{5cm}}
+\toprule
+\textbf{Endpoint} & \textbf{Fonction} \\
+\midrule
+GET / & Interface web \\
+POST /predict & Prédiction via formulaire \\
+POST /api/predict & Prédiction via API JSON \\
+GET /health & Vérification de santé \\
+GET /debug & Informations de debug \\
+\bottomrule
+\end{tabular}
+\end{tcolorbox}
+
+\subsection{Fonctionnalités implémentées}
+
+\subsubsection{Interface utilisateur}
+\begin{itemize}
+    \item Formulaire avec 6 champs (Recency, Frequency, Monetary, Age, Satisfaction, Tickets)
+    \item Boutons d'exemples pré-remplis (client fidèle / client à risque)
+    \item Jauge de risque visuelle (couleurs vert/orange/rouge)
+    \item Scores RFM calculés automatiquement
+    \item Conseils personnalisés selon le niveau de risque
+    \item Historique des 10 dernières prédictions
+\end{itemize}
+
+\subsubsection{Prétraitement en temps réel}
+L'application reconstruit un vecteur de features complet (103 dimensions) à partir 
+des données saisies :
+\begin{itemize}
+    \item Valeurs numériques saisies par l'utilisateur
+    \item Valeurs par défaut pour les features non renseignées
+    \item Encodage one-hot des variables catégorielles
+    \item Normalisation avec le scaler sauvegardé
+\end{itemize}
+
+\subsection{Exemples de prédictions}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{C{3cm} C{2cm} C{2cm} C{2cm} C{2.5cm} C{2cm}}
+\toprule
+\textbf{Profil} & \textbf{Freq} & \textbf{Monetary} & \textbf{Sat} & \textbf{Risque} & \textbf{Pred} \\
+\midrule
+Client Premium & 50 & 10000€ & 5 & 15\% & Fidèle \\
+Client Moyen & 5 & 500€ & 4 & 40\% & Fidèle \\
+Client Critique & 1 & 50€ & 1 & 89\% & Partant \\
+\bottomrule
+\end{tabular}
+\caption{Exemples de prédictions de l'interface}
+\end{table}
+
+\subsection{Logs et monitoring}
+L'application affiche des logs détaillés dans la console :
+\begin{itemize}
+    \item Données reçues du formulaire
+    \item Encodage des variables catégorielles
+    \item Vérification du vecteur final (NaN, shape)
+    \item Résultat de la prédiction (probabilité, niveau)
+\end{itemize}
+
+\subsection{Utilisation de l'API REST}
+\begin{lstlisting}[language=bash]
+# Exemple d'appel API avec curl
+curl -X POST http://127.0.0.1:5000/api/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "recency": 30,
+    "frequency": 5,
+    "monetary": 500,
+    "age": 35,
+    "satisfaction": 4,
+    "support_tickets": 0,
+    "favorite_season": "Hiver",
+    "spending_category": "Medium",
+    "account_status": "Active"
+  }'
+\end{lstlisting}
+
+\newpage
+\section{Conclusion et Perspectives}
+
+\subsection{Résumé des réalisations}
+\begin{tcolorbox}[title=✅ Bilan du projet]
+\begin{itemize}
+    \item \textbf{Exploration} : analyse complète de 52 features, identification des anomalies
+    \item \textbf{Préparation} : nettoyage, feature engineering, suppression leakage (9 features)
+    \item \textbf{Modélisation} : 4 modèles testés, Gradient Boosting retenu (F1=0.83, AUC=0.947)
+    \item \textbf{Segmentation} : 4 clusters clients + outliers, recommandations actionnables
+    \item \textbf{Déploiement} : application Flask fonctionnelle avec API REST
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Points forts du projet}
+\begin{enumerate}
+    \item \textbf{Rigueur scientifique} : split avant imputation, pas de data leakage
+    \item \textbf{Modèle performant} : F1-Score de 0.83, AUC de 0.947
+    \item \textbf{Segmentation exploitable} : 4 clusters aux profils distincts
+    \item \textbf{Interface professionnelle} : jauge de risque, scores RFM, historique
+    \item \textbf{Code versionné} : GitHub avec commits réguliers
+\end{enumerate}
+
+\subsection{Limites identifiées}
+\begin{itemize}
+    \item \textbf{FavoriteSeason domine le modèle} (56.5\% de l'importance) → possible biais temporel
+    \item \textbf{23.4\% d'outliers} retirés de la segmentation → perte d'information
+    \item \textbf{Donées datées} : période 2009-2011, centrées sur le Royaume-Uni
+    \item \textbf{Age imputé par médiane} : 30\% de valeurs manquantes
+    \item \textbf{KNN moins performant} sur données tabulaires complexes (F1=0.818)
 \end{itemize}
 
 \subsection{Perspectives d'amélioration}
-Plusieurs pistes pourraient être explorées pour améliorer la solution :
+\begin{multicols}{2}
 \begin{itemize}
-    \item \textbf{Plus de données} : Intégrer les logs de navigation et l'historique des emails pour enrichir les features
-    \item \textbf{Optimisation du seuil} : Ajuster le seuil de décision selon le coût d'acquisition client (CPA)
-    \item \textbf{Modèle temporel} : Utiliser des séries temporelles (LSTM) pour détecter les changements de comportement dans le temps
-    \item \textbf{API complète} : Ajouter toutes les features dans l'API de prédiction pour des résultats plus précis
-    \item \textbf{Déploiement cloud} : Mettre l'application sur AWS, Heroku ou Render pour un accès en ligne
-    \item \textbf{Test autres algorithmes} : XGBoost, LightGBM, ou des réseaux de neurones pour comparer les performances
+    \item Test de modèles deep learning (MLP, TabNet)
+    \item Ajout de données plus récentes (2020-2025)
+    \item Intégration de SHAP pour l'interprétabilité
+    \item Mise en production sur cloud (AWS, GCP, Heroku)
+    \item Dashboard temps réel avec Plotly Dash
+    \item A/B testing des recommandations marketing
+    \item Système de monitoring du modèle (drift detection)
+    \item Ajout de plus de features externes (météo, économie)
+\end{itemize}
+\end{multicols}
+
+\subsection{Livrables du projet}
+\begin{itemize}
+    \item \textbf{Code source} : dépôt GitHub complet
+    \item \textbf{Application Flask} : interface de prédiction fonctionnelle
+    \item \textbf{Modèle entraîné} : best\_model\_churn.pkl
+    \item \textbf{Notebooks} : analyses, modélisation, segmentation
+    \item \textbf{Rapport} : présent document (LaTeX)
+    \item \textbf{Présentation} : slides pour la soutenance
 \end{itemize}
 
-\section{Conclusion}
-
-Ce projet a permis de :
-\begin{itemize}
-    \item Maîtriser l'ensemble de la chaîne de traitement en data science (exploration → préparation → modélisation → évaluation → déploiement)
-    \item Appliquer des techniques avancées de prétraitement (imputation par médiane, encodage one-hot, normalisation StandardScaler)
-    \item Développer un modèle de classification performant (91.9\% d'exactitude)
-    \item Créer une segmentation client actionable avec K-Means (4 segments identifiés)
-    \item Déployer une application web fonctionnelle avec Flask
-\end{itemize}
-
-Les résultats obtenus démontrent la faisabilité d'une solution de prédiction du churn client, permettant à l'entreprise d'anticiper les départs et d'optimiser ses stratégies marketing. La segmentation a également mis en évidence que 84\% des clients sont occasionnels, représentant un fort potentiel de croissance pour l'entreprise.
-
+\newpage
 \section*{Annexes}
+\addcontentsline{toc}{section}{Annexes}
 
-\subsection*{A. Commandes d'installation et d'exécution}
-\begin{lstlisting}[language=bash]
-# Création de l'environnement virtuel
-python -m venv venv
-source venv/bin/activate  # ou venv\Scripts\activate sous Windows
+\subsection*{A. Structure complète du projet}
+\begin{verbatim}
+ProjetML-1/
+├── app/
+│   ├── app.py                 # Application Flask
+│   └── templates/
+│       └── index.html         # Interface utilisateur
+├── models/
+│   ├── best_model_churn.pkl   # Modèle Gradient Boosting
+│   ├── scaler.pkl             # StandardScaler
+│   ├── imputer.pkl            # SimpleImputer
+│   ├── feature_names.pkl      # Noms des 103 features
+│   └── ...                    # Autres modèles (kmeans, pca)
+├── notebooks/
+│   ├── test.py                # Script principal
+│   └── ...                    # Notebooks d'analyse
+├── data/
+│   ├── raw/                   # Données brutes
+│   ├── processed/             # Données nettoyées
+│   └── train_test/            # Split train/test
+├── reports/
+│   ├── segmentation_dashboard.png
+│   ├── arbre_decision.png
+│   └── segmentation_recommandations.csv
+├── src/
+│   ├── preprocessing.py
+│   ├── train_model.py
+│   └── utils.py
+├── requirements.txt
+├── README.md
+└── .gitignore
+\end{verbatim}
 
-# Installation des dépendances
-pip install -r requirements.txt
-
-# Lancement de l'application
-cd app
-python app.py
-\end{lstlisting}
-
-\subsection*{B. Lien GitHub}
-\url{https://github.com/myriamBenAbd0607/ProjetML}
-
-\subsection*{C. Technologies utilisées}
-\begin{itemize}
-    \item Python 3.9+
-    \item scikit-learn (modélisation, segmentation)
-    \item pandas, numpy (prétraitement)
-    \item Flask (déploiement)
-    \item joblib (sauvegarde du modèle)
-    \item Matplotlib, Seaborn (visualisations)
-\end{itemize}
-
-\subsection*{D. Métriques détaillées du modèle final}
+\subsection*{B. Environnement technique}
 \begin{table}[H]
 \centering
-\begin{tabular}{|l|c|}
-\hline
-\textbf{Métrique} & \textbf{Valeur} \\
-\hline
-Accuracy & 0.919 \\
-Precision (Churn=1) & 0.923 \\
-Recall (Churn=1) & 0.911 \\
-F1-Score & 0.917 \\
-AUC-ROC & 0.96 \\
-\hline
+\begin{tabular}{L{4cm} L{6cm}}
+\toprule
+\textbf{Catégorie} & \textbf{Technologies} \\
+\midrule
+Langage & Python 3.10+ \\
+Data & Pandas, NumPy \\
+Visualisation & Matplotlib, Seaborn \\
+Machine Learning & Scikit-learn (GB, RF, KNN, DecisionTree) \\
+Déploiement & Flask, HTML/CSS \\
+Versioning & Git, GitHub \\
+\bottomrule
 \end{tabular}
 \end{table}
+
+\subsection*{C. Installation et exécution}
+\begin{lstlisting}[language=bash]
+# Cloner le repository
+git clone https://github.com/myriamBenAbd0607/ProjetML.git
+cd ProjetML
+
+# Créer l'environnement virtuel
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
+
+# Installer les dépendances
+pip install -r requirements.txt
+
+# Lancer l'application Flask
+cd app
+python app.py
+
+# Ouvrir dans le navigateur
+# http://127.0.0.1:5000
+\end{lstlisting}
+
+\subsection*{D. Références}
+\begin{itemize}
+    \item Documentation Scikit-learn : \url{https://scikit-learn.org}
+    \item Documentation Flask : \url{https://flask.palletsprojects.com}
+    \item Documentation Pandas : \url{https://pandas.pydata.org}
+    \item Support de cours : Module Machine Learning - GI2
+\end{itemize}
 
 \end{document}
