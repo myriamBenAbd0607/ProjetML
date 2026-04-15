@@ -3,184 +3,601 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prédiction Churn Client</title>
+    <title>Prédiction Churn — E-commerce Cadeaux</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
         }
-        
+
         .container {
             background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             padding: 40px;
-            max-width: 500px;
+            max-width: 700px;
             width: 100%;
         }
-        
+
         h1 {
             text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-            font-size: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 6px;
+            font-size: 28px;
         }
-        
-        .form-group {
-            margin-bottom: 20px;
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 28px;
+            font-size: 13px;
         }
-        
+
+        /* FORMULAIRE */
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 18px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .two-columns   { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .three-columns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+        .form-group { margin-bottom: 12px; }
+
         label {
             display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 500;
+            margin-bottom: 6px;
+            color: #333;
+            font-weight: 600;
+            font-size: 13px;
         }
-        
-        input {
+
+        input, select {
             width: 100%;
-            padding: 12px;
+            padding: 10px 12px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 14px;
             transition: border-color 0.3s;
+            color: #333;
         }
-        
-        input:focus {
+
+        input:focus, select:focus {
             outline: none;
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
         }
-        
+
+        small {
+            display: block;
+            margin-top: 4px;
+            color: #aaa;
+            font-size: 11px;
+        }
+
         button {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s;
+            margin-top: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-        
+
         button:hover {
             transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102,126,234,0.45);
         }
-        
+
+        /* RÉSULTATS */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
         .result {
-            margin-top: 30px;
-            padding: 20px;
-            border-radius: 10px;
+            margin-top: 22px;
+            padding: 18px 20px;
+            border-radius: 12px;
             text-align: center;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 22px;
+            animation: fadeIn 0.4s ease;
         }
-        
-        .result.green {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+
+        .result.green  { background:#d4edda; color:#155724; border-left:5px solid #28a745; }
+        .result.red    { background:#f8d7da; color:#721c24; border-left:5px solid #dc3545; }
+        .result.orange { background:#fff3cd; color:#856404; border-left:5px solid #ffc107; }
+        .result.error  {
+            background:#fff3cd; color:#856404;
+            border:1px solid #ffeeba;
+            font-weight:normal; font-size:14px;
         }
-        
-        .result.red {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+
+        .advice {
+            margin-top: 12px;
+            padding: 13px;
+            background: #f0f7ff;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #2c3e50;
+            border-left: 4px solid #3498db;
+            line-height: 1.7;
         }
-        
-        .error {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
+
+        /* BARRE DE RISQUE */
+        .risk-bar-container {
+            margin-top: 16px;
+            padding: 14px;
+            background: #f8f9fa;
+            border-radius: 10px;
         }
-        
-        .info {
-            margin-top: 20px;
-            padding: 15px;
-            background: #e7f3ff;
+
+        .risk-bar-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        /* ✅ CORRECTION : classes CSS au lieu de style inline Jinja2 */
+        .proba-color-green  { font-size: 16px; color: #27ae60; }
+        .proba-color-orange { font-size: 16px; color: #f39c12; }
+        .proba-color-red    { font-size: 16px; color: #e74c3c; }
+
+        .risk-bar-track {
+            height: 14px;
+            background: #e0e0e0;
+            border-radius: 7px;
+            overflow: hidden;
+        }
+
+        .risk-bar-fill {
+            height: 100%;
+            border-radius: 7px;
+            transition: width 0.8s ease;
+        }
+
+        .risk-bar-fill.green  { background: linear-gradient(90deg,#2ecc71,#27ae60); }
+        .risk-bar-fill.orange { background: linear-gradient(90deg,#f39c12,#e67e22); }
+        .risk-bar-fill.red    { background: linear-gradient(90deg,#e74c3c,#c0392b); }
+
+        .risk-bar-zones {
+            display: flex;
+            margin-top: 5px;
+            gap: 2px;
+            font-size: 9px;
+        }
+
+        .zone {
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .z-green  { background:#27ae60; flex:30; }
+        .z-orange { background:#f39c12; flex:15; }
+        .z-red    { background:#e67e22; flex:20; }
+        .z-dred   { background:#c0392b; flex:35; }
+
+        /* MÉTRIQUES */
+        .metrics {
+            margin-top: 14px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .metric-card {
+            flex: 1;
+            min-width: 70px;
+            background: #f8f9fa;
+            padding: 10px 6px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #eee;
+            transition: transform 0.2s;
+        }
+
+        .metric-card:hover { transform: translateY(-2px); }
+
+        .metric-value {
+            font-size: 17px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        /* ✅ CORRECTION : classes CSS pour la couleur du risque */
+        .metric-risk-green  { font-size: 17px; font-weight: bold; color: #27ae60; }
+        .metric-risk-orange { font-size: 17px; font-weight: bold; color: #f39c12; }
+        .metric-risk-red    { font-size: 17px; font-weight: bold; color: #e74c3c; }
+
+        .metric-label {
+            font-size: 9px;
+            color: #999;
+            margin-top: 3px;
+            text-transform: uppercase;
+        }
+
+        /* SCORES FM */
+        .fm-container {
+            margin-top: 14px;
+            padding: 14px;
+            background: linear-gradient(135deg,#f5f7fa,#e8ecf0);
+            border-radius: 12px;
+            border: 1px solid #dde;
+        }
+
+        .fm-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #444;
+            font-size: 12px;
+        }
+
+        .fm-note {
+            text-align: center;
+            font-size: 10px;
+            color: #aaa;
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .fm-scores { display: flex; justify-content: space-around; }
+        .fm-score  { text-align: center; flex: 1; }
+
+        .fm-circle {
+            font-size: 22px;
+            font-weight: bold;
+            width: 52px;
+            height: 52px;
+            line-height: 52px;
+            border-radius: 50%;
+            margin: 0 auto 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: white;
+        }
+
+        /* ✅ CORRECTION : classes CSS pour les cercles FM */
+        .fm-circle-freq   { color: #2ecc71; }
+        .fm-circle-money  { color: #3498db; }
+        .fm-circle-global {
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            color: white;
+        }
+
+        .fm-label { font-size: 10px; color: #666; font-weight: 600; }
+
+        /* RÉCAPITULATIF */
+        .recap-box {
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: #f8f9fa;
             border-radius: 8px;
             font-size: 12px;
             color: #666;
-            text-align: center;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
         }
-        
-        .input-value {
-            margin-top: 20px;
-            padding: 10px;
+
+        .recap-item { display: flex; align-items: center; gap: 4px; }
+
+        /* PIED DE PAGE */
+        hr { margin: 20px 0; border: none; border-top: 1px solid #eee; }
+
+        .info {
+            padding: 12px;
             background: #f8f9fa;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 11px;
             text-align: center;
-            color: #666;
+            color: #777;
+            line-height: 2;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 550px) {
+            .container      { padding: 22px 14px; }
+            .two-columns    { grid-template-columns: 1fr; }
+            .three-columns  { grid-template-columns: 1fr 1fr; }
+            .recap-box      { flex-direction: column; gap: 6px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🔮 Prédiction de départ client</h1>
-        
-        <form method="POST" action="/predict">
+<div class="container">
+
+    <h1>🎁 Prédiction de départ client</h1>
+    <div class="subtitle">E-commerce de Cadeaux — Analyse comportementale ML</div>
+
+    <!-- ============================================================ -->
+    <!-- FORMULAIRE                                                    -->
+    <!-- ============================================================ -->
+    <form method="POST" action="/predict">
+
+        <!-- Données transactionnelles -->
+        <div class="section-title">📊 Données transactionnelles</div>
+        <div class="two-columns">
             <div class="form-group">
-                <label>📅 Recency (jours depuis dernier achat)</label>
-                <input type="number" name="recency" required 
-                       placeholder="Ex: 30" value="{{ recency or '' }}">
-                <small>Plus le nombre est élevé, plus le risque est grand</small>
+                <label>🛒 Frequency (achats)</label>
+                <input type="number" name="frequency" required
+                       min="1" step="1" placeholder="Ex: 5"
+                       value="{{ frequency or '' }}">
+                <small>Nombre total de commandes</small>
             </div>
-            
             <div class="form-group">
-                <label>🛒 Frequency (nombre d'achats)</label>
-                <input type="number" name="frequency" required 
-                       placeholder="Ex: 5" value="{{ frequency or '' }}">
-                <small>Plus le client achète, plus il est fidèle</small>
+                <label>💰 Monetary (£)</label>
+                <input type="number" name="monetary" required
+                       min="0" step="0.01" placeholder="Ex: 500"
+                       value="{{ monetary or '' }}">
+                <small>Dépense totale en livres sterling</small>
             </div>
-            
-            <div class="form-group">
-                <label>💰 Monetary (dépense totale en £)</label>
-                <input type="number" step="0.01" name="monetary" required 
-                       placeholder="Ex: 500" value="{{ monetary or '' }}">
-                <small>Montant total dépensé par le client</small>
-            </div>
-            
-            <div class="form-group">
-                <label>👤 Age (optionnel)</label>
-                <input type="number" name="age" placeholder="Ex: 35" value="{{ age or '' }}">
-            </div>
-            
-            <button type="submit">🔍 Prédire le risque</button>
-        </form>
-        
-        {% if prediction %}
-        <div class="result {{ color }}">
-            {{ prediction }}
         </div>
-        <div class="input-value">
-            📊 Données saisies: Recency={{ recency }}j, 
-            Frequency={{ frequency }}, Monetary={{ monetary }}£
+
+        <!-- Données client -->
+        <div class="section-title">👤 Données client</div>
+        <div class="three-columns">
+            <div class="form-group">
+                <label>🎂 Âge (ans)</label>
+                <input type="number" name="age"
+                       min="18" max="100" step="1"
+                       placeholder="Ex: 35"
+                       value="{{ age or '' }}">
+                <small>Optionnel (défaut : 35)</small>
+            </div>
+            <div class="form-group">
+                <label>⭐ Satisfaction (1-5)</label>
+                <select name="satisfaction">
+                    <option value="5"
+                        {% if satisfaction==5 %}selected{% endif %}>
+                        5 — Très satisfait</option>
+                    <option value="4"
+                        {% if satisfaction==4 or not satisfaction %}selected{% endif %}>
+                        4 — Satisfait</option>
+                    <option value="3"
+                        {% if satisfaction==3 %}selected{% endif %}>
+                        3 — Neutre</option>
+                    <option value="2"
+                        {% if satisfaction==2 %}selected{% endif %}>
+                        2 — Insatisfait</option>
+                    <option value="1"
+                        {% if satisfaction==1 %}selected{% endif %}>
+                        1 — Très insatisfait</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>🎫 Tickets support</label>
+                <input type="number" name="support_tickets"
+                       min="0" step="1" placeholder="0"
+                       value="{{ support_tickets or 0 }}">
+                <small>Nombre de tickets ouverts</small>
+            </div>
         </div>
-        {% endif %}
-        
-        {% if error %}
-        <div class="result error">
-            {{ error }}
+
+        <!-- Comportement -->
+        <div class="section-title">🗂️ Comportement d'achat</div>
+        <div class="three-columns">
+            <div class="form-group">
+                <label>🌸 Saison favorite</label>
+                <select name="favorite_season">
+                    <option value="Hiver"
+                        {% if favorite_season=='Hiver' %}selected{% endif %}>
+                        ❄️ Hiver</option>
+                    <option value="Automne"
+                        {% if favorite_season=='Automne' %}selected{% endif %}>
+                        🍂 Automne</option>
+                    <option value="Été"
+                        {% if favorite_season=='Été' %}selected{% endif %}>
+                        ☀️ Été</option>
+                    <option value="Printemps"
+                        {% if favorite_season=='Printemps' %}selected{% endif %}>
+                        🌸 Printemps</option>
+                </select>
+                <small>Saison d'achat préférée</small>
+            </div>
+            <div class="form-group">
+                <label>💳 Catégorie dépense</label>
+                <select name="spending_category">
+                    <option value="Low"
+                        {% if spending_category=='Low' %}selected{% endif %}>
+                        Low</option>
+                    <option value="Medium"
+                        {% if spending_category=='Medium'
+                           or not spending_category %}selected{% endif %}>
+                        Medium</option>
+                    <option value="High"
+                        {% if spending_category=='High' %}selected{% endif %}>
+                        High</option>
+                    <option value="VIP"
+                        {% if spending_category=='VIP' %}selected{% endif %}>
+                        VIP</option>
+                </select>
+                <small>Niveau de dépense habituel</small>
+            </div>
+            <div class="form-group">
+                <label>🏦 Statut compte</label>
+                <select name="account_status">
+                    <option value="Active"
+                        {% if account_status=='Active'
+                           or not account_status %}selected{% endif %}>
+                        ✅ Active</option>
+                    <option value="Suspended"
+                        {% if account_status=='Suspended' %}selected{% endif %}>
+                        ⚠️ Suspended</option>
+                    <option value="Pending"
+                        {% if account_status=='Pending' %}selected{% endif %}>
+                        🕐 Pending</option>
+                    <option value="Closed"
+                        {% if account_status=='Closed' %}selected{% endif %}>
+                        ❌ Closed</option>
+                </select>
+                <small>État actuel du compte</small>
+            </div>
         </div>
-        {% endif %}
-        
-        <div class="info">
-            💡 Modèle Random Forest entraîné sur 4372 clients<br>
-            🎯 Précision: 99.3% sur les données de test
+
+        <button type="submit">🔍 Analyser le risque de départ</button>
+    </form>
+
+    <!-- ============================================================ -->
+    <!-- RÉSULTATS                                                     -->
+    <!-- ============================================================ -->
+    {% if prediction %}
+
+    <div class="result {{ color }}">{{ prediction }}</div>
+
+    {% if advice %}
+    <div class="advice">{{ advice }}</div>
+    {% endif %}
+
+    <!-- Barre de risque -->
+    {% if proba %}
+    <div class="risk-bar-container">
+        <div class="risk-bar-label">
+            <span>📊 Probabilité de départ</span>
+
+            <!-- ✅ CORRIGÉ : classe CSS au lieu de style inline Jinja2 -->
+            <span class="proba-color-{{ color }}">
+                <strong>{{ proba }}%</strong>
+            </span>
+
+        </div>
+       <div class="risk-bar-track">
+        <div class="risk-bar-fill {{ color }}" id="risk-fill"></div>
+    </div>
+
+<script>
+    document.getElementById('risk-fill').style.width = '{{ proba }}%';
+</script>
+        <div class="risk-bar-zones">
+            <div class="zone z-green">0-30% Faible</div>
+            <div class="zone z-orange">30-45% Modéré</div>
+            <div class="zone z-red">45-65% Élevé</div>
+            <div class="zone z-dred">65-100% Critique</div>
         </div>
     </div>
+    {% endif %}
+
+    <!-- Métriques -->
+    <div class="metrics">
+        <div class="metric-card">
+            <div class="metric-value">{{ frequency }}</div>
+            <div class="metric-label">Achats</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{{ monetary }}£</div>
+            <div class="metric-label">Dépense</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{{ age|int }}ans</div>
+            <div class="metric-label">Âge</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{{ satisfaction }}/5</div>
+            <div class="metric-label">Satisfaction</div>
+        </div>
+        {% if proba %}
+        <div class="metric-card">
+
+            <!-- ✅ CORRIGÉ : classe CSS au lieu de style inline Jinja2 -->
+            <div class="metric-risk-{{ color }}">
+                {{ proba }}%
+            </div>
+
+            <div class="metric-label">Risque</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Scores FM -->
+    {% if fm_score %}
+    <div class="fm-container">
+        <div class="fm-title">📊 Score FM — Fréquence &amp; Montant</div>
+        <div class="fm-note">
+            ℹ️ La Récence est exclue du modèle (data leakage détecté)
+        </div>
+        <div class="fm-scores">
+            <div class="fm-score">
+
+                <!-- ✅ CORRIGÉ : classe CSS au lieu de style inline Jinja2 -->
+                <div class="fm-circle fm-circle-freq">
+                    {{ f_score }}
+                </div>
+
+                <div class="fm-label">Fréquence</div>
+            </div>
+            <div class="fm-score">
+
+                <!-- ✅ CORRIGÉ : classe CSS au lieu de style inline Jinja2 -->
+                <div class="fm-circle fm-circle-money">
+                    {{ m_score }}
+                </div>
+
+                <div class="fm-label">Montant</div>
+            </div>
+            <div class="fm-score">
+
+                <!-- ✅ CORRIGÉ : classe CSS au lieu de style inline Jinja2 -->
+                <div class="fm-circle fm-circle-global">
+                    {{ fm_score }}
+                </div>
+
+                <div class="fm-label">Global FM</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Récapitulatif -->
+    <div class="recap-box">
+        <div class="recap-item">🌸 <strong>{{ favorite_season }}</strong></div>
+        <div class="recap-item">💳 <strong>{{ spending_category }}</strong></div>
+        <div class="recap-item">🏦 <strong>{{ account_status }}</strong></div>
+        <div class="recap-item">🎫 <strong>{{ support_tickets }}</strong> ticket(s)</div>
+    </div>
+
+    {% endif %}
+
+    {% if error %}
+    <div class="result error">{{ error }}</div>
+    {% endif %}
+
+    <!-- Pied de page -->
+    <hr>
+    <div class="info">
+        💡 <strong>Modèle Gradient Boosting</strong>
+        — F1=0.830 &nbsp;|&nbsp; Accuracy=89.3% &nbsp;|&nbsp; AUC=0.947<br>
+        📊 Entraîné sur <strong>4372 clients</strong>
+        &nbsp;|&nbsp; <strong>103 features</strong> analysées
+    </div>
+
+</div>
 </body>
 </html>

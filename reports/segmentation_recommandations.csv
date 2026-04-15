@@ -1,5 +1,6 @@
-Cluster,Nom du segment,Nombre clients,% clients,Taux churn,Recency (jours),Frequency (achats),Monetary (€),Profil,Recommandation,Priorité
-0,Clients VIP / Champions,547,15.6%,3.3%,22,15.0,5699,"Achats très fréquents, dépenses élevées, fidélité maximale","🌟 Programme de parrainage, offres exclusives, accès anticipé aux nouveautés",🔴 Stratégique
-1,Clients à Risque Élevé,2,0.1%,50.0%,164,2.5,1,"Signes de départ imminent, activité en forte baisse","📞 Offre de fidélisation urgente, contact personnalisé, code promo exclusif",🟠 Urgent
-2,Clients Occasionnels,2936,84.0%,39.0%,106,2.9,830,"Achats peu fréquents, potentiel de croissance important","📧 Newsletter engageante, recommandations produits personnalisées",🟡 Moyenne
-3,Clients VIP / Champions,12,0.3%,0.0%,5,107.8,93293,"Achats très fréquents, dépenses élevées, fidélité maximale","🌟 Programme de parrainage, offres exclusives, accès anticipé aux nouveautés",🔴 Stratégique
+Cluster,Nom du segment,Nombre clients,% clients,Taux churn,Frequency (achats),Monetary (£),Profil,Recommandation,Priorité
+0,Clients Réguliers à Risque,385,12.2%,32.5%,4.2,1167,"Profil intermédiaire (4.2 achats, 1167£), risque de départ (32%)","📊 Offres fidélisation ciblées, alertes comportementales",🟠 Vigilance
+1,Clients à Risque Critique,1143,36.2%,37.5%,6.2,1874,"Churn le plus élevé (38%), fréquence (6.2 achats)","📞 Contact direct urgent, offre personnalisée -25%",🔴 Urgent
+2,Clients Stables à Développer,217,6.9%,29.5%,5.0,1488,"Profil stable (5.0 achats, 1488£), risque modéré (29%)","📊 Upselling progressif, cross-selling, programme points",🟡 Développement
+3,Clients Peu Actifs,1413,44.7%,30.8%,3.0,949,"Achats peu fréquents (3.0 achats), à réactiver (31% churn)","📧 Campagne réactivation, offre découverte produits",🟡 Réactivation
+-1,Clients Premium / Gros Acheteurs,339,9.7%,32.4%,11.9,7129,Profils atypiques : forte fréquence (11.9 achats) et valeur élevée (7129£),"🌟 Suivi personnalisé, offres exclusives, programme fidélité premium",🟢 Stratégique
