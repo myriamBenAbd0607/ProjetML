@@ -1,213 +1,176 @@
 # Notes d'exploration - Projet ML Retail
 
-**Date:** 18 février 2026
-**Auteur:** [Votre nom]
+**Date:** 15 Avril 2026  
+**Auteur:** Myriam Ben Abdallah  
+**Projet:** Analyse Comportementale Clientèle - Prédiction du Churn
 
 ---
 
-## 1. STRUCTURE GÉNÉRALE DES DONNÉES
+## 📊 1. STRUCTURE GÉNÉRALE DES DONNÉES
 
-- **Nombre de clients:** 4 372
-- **Nombre de features:** 52
-- **Types de données:**
-  - int64 (20 colonnes) : variables numériques entières
-  - float64 (14 colonnes) : variables numériques décimales
-  - object (18 colonnes) : variables catégorielles
+| Indicateur | Valeur |
+|------------|--------|
+| **Nombre de clients** | 4 372 |
+| **Nombre de features** | 52 |
+| **Période** | 2009-2011 |
 
----
+### Types de données
 
-## 2. ANALYSE DE LA VARIABLE CIBLE (CHURN)
-
-- **Churn = 0 (fidèle):** XX clients (XX%)
-- **Churn = 1 (parti):** XX clients (XX%)
-
-> À compléter après avoir calculé
+| Type | Nb colonnes | Exemples |
+|------|-------------|----------|
+| `int64` | 20 | CustomerID, Recency, Frequency, Age |
+| `float64` | 14 | MonetaryTotal, ReturnRatio, SatisfactionScore |
+| `object` | 18 | RFMSegment, CustomerType, Region |
 
 ---
 
-## 3. VALEURS MANQUANTES
+## 🎯 2. VARIABLE CIBLE (CHURN)
 
-| Colonne | Manquantes | Pourcentage | Observation |
-|---------|------------|-------------|-------------|
-| Age | 1311 | 30.0% | ✅ Conforme au PDF |
-| AvgDaysBetweenPurchases | 79 | 1.8% | Probablement clients avec 1 seul achat |
+| Classe | Libellé | Nombre | Pourcentage |
+|--------|---------|--------|-------------|
+| **0** | Fidèle | 2 918 | 66.7% |
+| **1** | Partant | 1 454 | 33.3% |
+
+> ✅ Déséquilibre acceptable (ratio 2:1)
 
 ---
 
-## 4. VALEURS ABERRANTES / CODES SPÉCIAUX
+## ❓ 3. VALEURS MANQUANTES
+
+| Colonne | Manquantes | % | Traitement |
+|---------|------------|---|-------------|
+| **Age** | 1 311 | 30.0% | Imputation par médiane (APRÈS split) |
+| **AvgDaysBetweenPurchases** | 79 | 1.8% | Clients avec 1 seul achat → valeur cohérente |
+
+---
+
+## ⚠️ 4. VALEURS ABERRANTES / CODES SPÉCIAUX
 
 ### SupportTicketsCount
-- Valeurs normales: 0-8 (96.9% des clients)
-- **Codes spéciaux:**
-  - -1 : 43 clients (1.0%)
-  - 999 : 87 clients (2.0%)
-- **Total à traiter:** 130 clients (3%) 
+
+| Valeur | Nb clients | Signification | Traitement |
+|--------|------------|---------------|-------------|
+| -1 | 43 | Non applicable | → Remplacé par médiane (2) |
+| 999 | 87 | Valeur extrême | → Remplacé par médiane (2) |
+| 0-9 | 4 242 | Valeurs normales | Conservées |
 
 ### SatisfactionScore
-- Valeurs normales: 1-5 (92.0% des clients)
-- **Codes spéciaux:**
-  - -1 : 115 clients (2.6%)
-  - 0 : 120 clients (2.7%)
-  - 99 : 114 clients (2.6%)
-- **Total à traiter:** 349 clients (8%)
 
-### MonetaryTotal
-- Valeurs négatives: **À compter**
-- Interprétation: retours produits ? remboursements ?
+| Valeur | Nb clients | Signification | Traitement |
+|--------|------------|---------------|-------------|
+| -1 | 115 | Non renseigné | → Remplacé par médiane (3) |
+| 0 | 120 | Non renseigné | → Remplacé par médiane (3) |
+| 99 | 114 | Valeur extrême | → Remplacé par médiane (3) |
+| 1-5 | 4 023 | Valeurs normales | Conservées |
 
----
+### MonetaryTotal (dépenses négatives)
 
-## 5. ANALYSE DES COLONNES CATÉGORIELLES
+| Indicateur | Valeur |
+|------------|--------|
+| **Clients avec dépense négative** | 44 (1%) |
+| **ReturnRatio moyen (clients négatifs)** | 87% |
+| **ReturnRatio moyen global** | 3% |
 
-**18 colonnes catégorielles identifiées:**
-- RFMSegment
-- AgeCategory
-- SpendingCategory
-- CustomerType
-- FavoriteSeason
-- PreferredTimeOfDay
-- Region
-- LoyaltyLevel
-- ChurnRiskCategory
-- WeekendPreference
-- BasketSizeCategory
-- ProductDiversity
-- Gender
-- AccountStatus
-- Country
-- ... (liste complète à mettre)
+**Décision:** ✅ On GARDE ces clients (cas réels de retours/remboursements)
 
 ---
 
-## 6. PREMIÈRES OBSERVATIONS STATISTIQUES
+## 📅 5. ANALYSE DES DATES D'INSCRIPTION
 
-| Feature | Min | Max | Moyenne | Médiane | Observation |
-|---------|-----|-----|---------|---------|-------------|
-| Recency | 1 | 374 | 92 | 50 | Présence de clients inactifs |
-| Frequency | 1 | 248 | 5 | 3 | Distribution asymétrique |
-| MonetaryTotal | -4287 | 279489 | 1898 | 648 | Très gros clients, valeurs négatives |
+### Répartition par année
 
----
+| Année | Nb clients | % |
+|-------|------------|---|
+| 2009 | 36 | 0.8% |
+| 2010 | 2 143 | 49.0% |
+| 2011 | 2 193 | 50.2% |
 
-## 7. PROBLÈMES DE QUALITÉ IDENTIFIÉS (RÉSUMÉ)
+### Taux de churn par mois d'inscription
 
-1. **Valeurs manquantes** (Age, AvgDaysBetweenPurchases)
-2. **Valeurs aberrantes** (SupportTickets, Satisfaction)
-3. **Valeurs négatives** (MonetaryTotal, MonetaryMin)
-4. **Formats de dates inconsistants** (RegistrationDate)
-5. **Colonnes constantes à vérifier** (NewsletterSubscribed probablement)
+| Mois | Taux churn | Risque |
+|------|------------|--------|
+| Mai | 41.1% | 🔴 Très élevé |
+| Février | 40.6% | 🔴 Élevé |
+| Janvier | 38.6% | 🟠 Modéré |
+| Septembre | 23.9% | 🟢 Faible |
 
----
-
-## 8. PLAN D'ACTION POUR LE NETTOYAGE
-
-| Problème | Solution proposée |
-|----------|-------------------|
-| Age (30% manquants) | Imputation (médiane ?) |
-| AvgDaysBetweenPurchases (1.8% manquants) | Remplacer par 0 ou NaN |
-| SupportTickets (-1, 999) | Remplacer par NaN ou valeur par défaut |
-| Satisfaction (-1, 99) | Remplacer par NaN ou mode |
-| MonetaryTotal négatif | À discuter (garder ? corriger ?) |
-| RegistrationDate | Parsing et standardisation |
-| Colonnes catégorielles | Encodage (one-hot, ordinal) |
+> 📌 **Insight métier:** Les clients inscrits au printemps partent plus que ceux inscrits en automne.
 
 ---
 
-## 9. QUESTIONS À RÉSOUDRE
+## 🔧 6. TRAITEMENTS EFFECTUÉS
 
-- [ ] Combien de clients avec MonetaryTotal négatif ?
-- [ ] Les valeurs -1 et 99 dans Satisfaction ont-elles une signification ?
-- [ ] Que faire des valeurs extrêmes dans MonetaryTotal ?
-- [ ] Y a-t-il des colonnes constantes à supprimer ?
+### Feature Engineering
 
----
+| Nouvelle feature | Source | Utilité |
+|-----------------|--------|---------|
+| `RegYear`, `RegMonth`, `RegDay` | RegistrationDate | Capturer saisonnalité |
+| `IP_IsPrivate`, `IP_Class`, `IP_FirstOctet` | LastLoginIP | Détecter type client |
+| `HasNegativeMonetary` | MonetaryTotal | Flag retours produits |
 
-## 10. NOTES COMPLÉMENTAIRES
+### Suppressions
 
-- Le PDF mentionnait 30% de valeurs manquantes pour Age → confirmé
-- NewsletterSubscribed semble constante ("Yes") → à supprimer probablement
-- RegistrationDate a plusieurs formats → à parser
-
-## Traitement des codes spéciaux
-
-### SupportTicketsCount
-- 43 valeurs -1 et 87 valeurs 999 → remplacées par la médiane (2.0)
-- ✅ Plus aucune valeur spéciale
-
-### SatisfactionScore
-- 115 valeurs -1, 120 valeurs 0, 114 valeurs 99 → remplacées par la médiane (3.0)
-- ✅ Plus aucune valeur spéciale
-
-## Décision sur les valeurs négatives
-
-- **44 clients** avec MonetaryTotal négatif (1%)
-- Leur ReturnRatio moyen est de **87%** (vs 3% global)
-- ✅ **Décision**: On les GARDE
-- Justification: Ces cas existent dans la réalité, le modèle doit les apprendre
-
-## Analyse des dates d'inscription
-- **2009**: 36 clients (0.8%)
-- **2010**: 2143 clients (49.0%)
-- **2011**: 2193 clients (50.2%)
-
-**Saisonnalité**:
-- Pic d'inscriptions en avril-mai-juin (printemps)
-- Moins d'inscriptions en janvier-février
-## Colonnes supprimées
 | Colonne | Raison |
 |---------|--------|
-| NewsletterSubscribed | Constante (100% = "Yes") |
-✅ Valeurs manquantes traitées
-Age → imputé par médiane
+| `NewsletterSubscribed` | Constante (100% = "Yes") |
+| `CustomerID` | Identifiant non prédictif |
+| `RegistrationDate` | Remplacée par RegYear, RegMonth, etc. |
+| `LastLoginIP` | Remplacée par 3 features |
 
-AvgDaysBetweenPurchases → remplacé par 0
+---
 
-✅ Codes spéciaux traités
-SupportTickets (-1, 999) → remplacés par médiane
+## 🧹 7. RÉCAPITULATIF DU NETTOYAGE
 
-Satisfaction (-1, 0, 99) → remplacés par médiane
+| Étape | Résultat |
+|-------|----------|
+| **Shape initiale** | 4 372 × 52 |
+| **Valeurs manquantes** | 0 (après imputation) |
+| **Codes spéciaux** | 0 (remplacés) |
+| **Features après nettoyage** | 41 |
+| **Features après encodage** | 103 |
 
-✅ Dates converties
-RegistrationDate → format datetime
+---
 
-Nouvelles features: RegYear, RegMonth, RegDay, RegWeekday
+## 🤖 8. MODÈLES TESTÉS
 
-✅ Colonnes inutiles supprimées
-NewsletterSubscribed (constante)
+| Modèle | F1-Score | ROC-AUC | Recall |
+|--------|----------|---------|--------|
+| **Gradient Boosting** | **0.830** | **0.947** | 0.787 |
+| Arbre Décision | 0.819 | 0.944 | **0.924** |
+| KNN Optimisé | 0.818 | 0.925 | 0.825 |
+| Random Forest | 0.783 | 0.907 | 0.787 |
 
-✅ Valeurs négatives conservées (cas réels)
-## Récapitulatif du nettoyage
+> 🏆 **Modèle final retenu:** Gradient Boosting
 
-- **Shape finale**: 4372 lignes, 55 colonnes
-- **Valeurs manquantes**: 0
-- **Codes spéciaux**: 0
-- **Colonnes ajoutées**: RegYear, RegMonth, RegDay, RegWeekday
-- **Colonnes supprimées**: NewsletterSubscribed
+---
 
-## Premier modèle - KNN (K Plus Proches Voisins)
-### Résultats
-- **Accuracy**: 90.9%
-- **Précision**: 97.7% (excellente)
-- **Rappel**: 74.2% (à améliorer)
-- **F1-Score**: 0.84
+## 📊 9. SEGMENTATION CLIENT (K-Means)
 
-### Interprétation métier
-- ✅ Très fiable quand il prédit un départ
-- ⚠️ Rate 1 client partant sur 4
-- 📊 Performance globalement très bonne pour un premier modèle
+| Segment | Taille | Churn | Profil | Action |
+|---------|--------|-------|--------|--------|
+| **Cluster 0** | 385 (12%) | 32.5% | 4.2 achats, 1167£ | Offres ciblées |
+| **Cluster 1** | 1 143 (36%) | 37.5% | 6.2 achats, 1874£ | Contact urgent |
+| **Cluster 2** | 217 (7%) | 29.5% | 5.0 achats, 1488£ | Upselling |
+| **Cluster 3** | 1 413 (45%) | 30.8% | 3.0 achats, 949£ | Réactivation |
+| **Outliers** | 339 (10%) | 32.4% | 11.9 achats, 7129£ | Suivi VIP |
 
-## Résultats de la segmentation client (K-Means)
+---
 
-### 4 segments identifiés :
+## ✅ 10. PLAN D'ACTION RÉALISÉ
 
-| Segment | Nombre clients | Taux de churn | Profil | Recommandation |
-|---------|----------------|---------------|--------|----------------|
-| **Cluster 0** | 547 (16%) | 3.3% | Clients fidèles, achats fréquents et dépenses élevées | Programme de parrainage, offre VIP |
-| **Cluster 1** | 2 (0.06%) | 50% | Clients extrêmement inactifs | Contact personnalisé prioritaire |
-| **Cluster 2** | 2936 (84%) | 39% | Clients occasionnels, faible fréquence | Campagnes de réengagement |
-| **Cluster 3** | ? | ? | ? | ? |
+| Problème | Solution appliquée |
+|----------|-------------------|
+| Age (30% manquants) | Imputation par médiane APRÈS split |
+| Codes spéciaux (-1, 999) | Remplacement par médiane |
+| Dates inconsistantes | Parsing + extraction année/mois/jour |
+| Colonnes constantes | Suppression |
+| Features leakantes | Suppression (Recency, RFMSegment, etc.) |
+| Multicolinéarité | Suppression 7 features redondantes |
 
-### Recommandations marketing :
-- **Fidéliser les Cluster 0** : programme VIP, avantages exclusifs
-- **Réactiver les Cluster 2** : emails personnalisés, offres spéciales
-- **Sauver les Cluster 1** : contact direct, analyse des causes
+---
+
+## 📌 11. NOTES COMPLÉMENTAIRES
+
+- ✅ Le fichier est prêt pour être versionné sur GitHub
+- ✅ Les résultats finaux sont dans `reports/segmentation_recommandations.csv`
+- ✅ Le modèle final est sauvegardé dans `models/best_model_churn.pkl`
