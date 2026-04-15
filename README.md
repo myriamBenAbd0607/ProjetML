@@ -45,9 +45,27 @@ L'objectif est d'identifier les clients à risque de départ pour personnaliser 
 - API REST disponible
 - Scores RFM et conseils personnalisés
 
-## 🚀 Installation et exécution
+# Projet Machine Learning - Prédiction du Churn
 
-### 1. Cloner le repository
+## 📦 Livrables
+
+### Présentation et Rapport
+[![PDF](https://img.shields.io/badge/Rapport-PDF-red)](https://github.com/myriamBenAbd0607/ProjetML/blob/main/presentations/rapport_projet_ml.pdf)
+[![PPTX](https://img.shields.io/badge/Présentation-PowerPoint-orange)](https://github.com/myriamBenAbd0607/ProjetML/blob/main/presentations/presentation_projet_ml.pptx)
+
+### Code source
+- [🐍 Application Flask](https://github.com/myriamBenAbd0607/ProjetML/blob/main/app/app.py)
+- [📓 Notebook principal](https://github.com/myriamBenAbd0607/ProjetML/blob/main/notebooks/test.py)
+
+### Modèles et données
+- [🤖 Modèle final](https://github.com/myriamBenAbd0607/ProjetML/tree/main/models)
+- [📊 Rapports de segmentation](https://github.com/myriamBenAbd0607/ProjetML/tree/main/reports)
+
+## 🚀 Exécution du projet
+
 ```bash
-git clone https://github.com/votre-username/nom-du-projet.git
-cd nom-du-projet
+git clone https://github.com/myriamBenAbd0607/ProjetML.git
+cd ProjetML
+pip install -r requirements.txt
+cd app
+python app.py
